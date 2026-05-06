@@ -1,8 +1,4 @@
-# Aplikacja logowania – SPA + Express.js
 
-## Struktura projektu
-
-```
 
 
 ## Jak uruchomić
