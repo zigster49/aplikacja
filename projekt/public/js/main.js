@@ -37,6 +37,10 @@ function showView(view) {
     };
 
     history.pushState({ view }, '', paths[view]);
+
+    if (view === 'daily_quizz') {
+        loadDailyQuiz();
+    }
 }
 
 
@@ -69,7 +73,172 @@ window.addEventListener('popstate', (e) => {
     else showView('home');
 })();
 
+let dailyQuizData = null;
+let dailyQuizTimerInterval = null;
+let currentDailyQuestionIndex = 0;
+let dailyQuizCorrectCount = 0;
 
+// Pobiera quiz dnia z backendu i uruchamia jego wyświetlanie.
+async function loadDailyQuiz() {
+    const container = document.getElementById('dailyQuizContainer');
+    if (!container) return;
+
+    container.innerHTML = '<p>Ładuję quiz dnia...</p>';
+
+    try {
+        const response = await fetch('/daily_quizz');
+        if (!response.ok) {
+            container.innerHTML = '<p>Nie udało się pobrać quizu.</p>';
+            return;
+        }
+
+        const quiz = await response.json();
+        dailyQuizData = quiz;
+        renderDailyQuiz(quiz);
+    } catch (err) {
+        console.error('Błąd pobierania quizu:', err);
+        container.innerHTML = '<p>Nie można pobrać quizu. Spróbuj ponownie.</p>';
+    }
+}
+
+// Renderuje stronę quizu i przygotowuje pierwszy zestaw pytań.
+function renderDailyQuiz(quiz) {
+    const container = document.getElementById('dailyQuizContainer');
+    if (!container) return;
+
+    currentDailyQuestionIndex = 0;
+    dailyQuizCorrectCount = 0;
+
+    container.innerHTML = `
+        <div class="daily-quiz-card">
+            <h3>${quiz.title}</h3>
+            <div id="dailyQuizQuestionContainer"></div>
+            <p id="dailyQuizFeedback" class="quiz-feedback"></p>
+        </div>
+    `;
+
+    showDailyQuizQuestion();
+}
+
+// Pokazuje aktualne pytanie oraz formularz z opcjami.
+function showDailyQuizQuestion() {
+    const container = document.getElementById('dailyQuizQuestionContainer');
+    if (!container || !dailyQuizData) return;
+
+    const questionData = dailyQuizData.questions[currentDailyQuestionIndex];
+    if (!questionData) {
+        finishDailyQuiz();
+        return;
+    }
+
+    const optionsHtml = questionData.options.map((option, index) => `
+        <label class="quiz-option">
+            <input type="radio" name="dailyQuizAnswer" value="${index}">
+            ${option}
+        </label>
+    `).join('');
+
+    container.innerHTML = `
+        <p>Pytanie ${currentDailyQuestionIndex + 1} / ${dailyQuizData.questions.length}</p>
+        <p>${questionData.question}</p>
+        <form id="dailyQuizForm">
+            ${optionsHtml}
+            <button type="submit">Zatwierdź odpowiedź</button>
+        </form>
+    `;
+
+    document.getElementById('dailyQuizForm')?.addEventListener('submit', handleDailyQuizSubmit);
+}
+
+// Obsługuje odpowiedź użytkownika, aktualizuje wynik i przechodzi do kolejnego pytania.
+function handleDailyQuizSubmit(event) {
+    event.preventDefault();
+    const feedback = document.getElementById('dailyQuizFeedback');
+    const selected = document.querySelector('input[name="dailyQuizAnswer"]:checked');
+
+    if (!selected) {
+        if (feedback) {
+            feedback.textContent = 'Wybierz odpowiedź, zanim przejdziesz dalej.';
+            feedback.style.color = 'red';
+        }
+        return;
+    }
+
+    const selectedIndex = Number(selected.value);
+    const questionData = dailyQuizData.questions[currentDailyQuestionIndex];
+
+    if (selectedIndex === questionData.correctIndex) {
+        dailyQuizCorrectCount += 1;
+        if (feedback) {
+            feedback.textContent = '✔️ Poprawna odpowiedź.';
+            feedback.style.color = 'green';
+        }
+    } else {
+        if (feedback) {
+            feedback.textContent = '❌ Niepoprawna odpowiedź.';
+            feedback.style.color = 'red';
+        }
+    }
+
+    currentDailyQuestionIndex += 1;
+
+    if (currentDailyQuestionIndex >= dailyQuizData.questions.length) {
+        finishDailyQuiz();
+    } else {
+        setTimeout(() => {
+            if (feedback) feedback.textContent = '';
+            showDailyQuizQuestion();
+        }, 700);
+    }
+}
+
+// Kończy quiz i pokazuje tylko wynik z timerem do następnego quizu.
+function finishDailyQuiz() {
+    const container = document.getElementById('dailyQuizContainer');
+    if (!container || !dailyQuizData) return;
+
+    container.innerHTML = `
+        <div class="daily-quiz-card finished-quiz">
+            <h3>${dailyQuizData.title}</h3>
+            <p>Ukończyłeś quiz! Poprawnych odpowiedzi: ${dailyQuizCorrectCount} / ${dailyQuizData.questions.length}</p>
+            <div class="quiz-result">
+                <p>Następny quiz dnia za</p>
+                <p id="dailyQuizTimer" class="quiz-timer"></p>
+            </div>
+        </div>
+    `;
+
+    const timerEl = document.getElementById('dailyQuizTimer');
+    startDailyQuizCountdown(dailyQuizData.nextQuizAt, timerEl);
+}
+
+function startDailyQuizCountdown(nextQuizAt, element) {
+    if (!element) return;
+    if (dailyQuizTimerInterval) {
+        clearInterval(dailyQuizTimerInterval);
+    }
+
+    function updateTimer() {
+        const target = new Date(nextQuizAt).getTime();
+        const now = Date.now();
+        const diff = target - now;
+
+        if (diff <= 0) {
+            element.textContent = 'Quiz dnia jest już dostępny. Odśwież stronę.';
+            clearInterval(dailyQuizTimerInterval);
+            return;
+        }
+
+        const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+        const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+
+        element.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    updateTimer();
+    dailyQuizTimerInterval = setInterval(updateTimer, 1000);
+}
 
 
 // Wyświetla komunikat błędu w podanym elemencie.
