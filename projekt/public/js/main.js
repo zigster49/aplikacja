@@ -86,7 +86,7 @@ async function loadDailyQuiz() {
     container.innerHTML = '<p>Ładuję quiz dnia...</p>';
 
     try {
-        const response = await fetch('/daily_quizz');
+        const response = await fetch('/api/daily_quizz');
         if (!response.ok) {
             container.innerHTML = '<p>Nie udało się pobrać quizu.</p>';
             return;

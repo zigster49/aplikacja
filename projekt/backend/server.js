@@ -134,7 +134,7 @@ function getDailyQuiz() {
     const intervalMs = 24 * 60 * 60 * 1000;
     const intervalStart = Math.floor(now.getTime() / intervalMs) * intervalMs;
     const dayIndex = Math.floor(intervalStart / intervalMs);
-    const quizIndex = (dayIndex * 17 + 23) % dailyQuizzes.length;
+    const quizIndex = (dayIndex * 17 + 23) % dailyQuizzes.length; //Wzór na zmianę kolejności quizów co dzień, 17 i 23 to dowolne liczby pierwsze
     const quiz = dailyQuizzes[quizIndex];
     const nextQuizAt = new Date(intervalStart + intervalMs).toISOString();
 
@@ -267,10 +267,13 @@ apiRouter.post('/register', async (req, res) => {
 //   POST /api/register
 app.use('/api', apiRouter);
 
-// GET /daily_quizz zwraca quiz dnia wybierany co 24h
-app.get('/daily_quizz', (req, res) => {
+// GET /api/daily_quizz zwraca quiz dnia wybierany co 24h
+app.get('/api/daily_quizz', (req, res) => {
     res.json(getDailyQuiz());
 });
+
+
+
 
 
 // TRASY STRON (HTML)
@@ -278,7 +281,7 @@ app.get('/daily_quizz', (req, res) => {
 // Wszystkie trasy GET serwują index.html – jeden plik HTML
 // zawiera stronę główną, logowanie i rejestrację jako widoki SPA.
 // JavaScript (main.js) przełącza widoki na podstawie URL.
-app.get('/{*path}', (req, res) => {
+app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
