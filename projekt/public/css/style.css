@@ -1,0 +1,265 @@
+/* =============================================================
+   style.css – arkusz styli aplikacji logowania
+   ============================================================= */
+
+/* Reset domyślnych stylów przeglądarki */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Wyśrodkowanie całości na ekranie, gradientowe tło */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+
+/* =============================================================
+   NAWIGACJA
+   ============================================================= */
+
+#navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 64px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+}
+
+/* Logo w navbarze */
+.nav-logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #007BFF;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+
+/* Lista linków nawigacyjnych */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+}
+
+/* Zwykły link w nav */
+.nav-links a {
+    text-decoration: none;
+    font-size: 0.9rem;
+    color: #555;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: color 0.2s;
+}
+.nav-links a:hover { color: #007BFF; }
+
+/* Przycisk CTA w nav */
+.nav-links a.nav-btn {
+    background: #007BFF;
+    color: #fff;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.nav-links a.nav-btn:hover { background: #0056b3; }
+
+
+/* =============================================================
+   STRONA GŁÓWNA (hero)
+   
+
+/* Pełnoekranowa sekcja hero */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 100px 24px 60px;
+}
+
+/* Główny tytuł */
+.hero h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 20px;
+    line-height: 1.15;
+}
+
+/* Niebieski akcent w tytule */
+.hero h1 span { color: #007BFF; }
+
+/* Podtytuł */
+.hero p {
+    font-size: 1.05rem;
+    color: #666;
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 40px;
+}
+
+/* =============================================================
+   NOWE: KARTY WYBORU (ZAMIAST PRZYCISKÓW)
+   ============================================================= */
+
+.hero-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Karta */
+.hero-card {
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 16px;
+    width: 240px;
+    cursor: pointer;
+    text-align: left;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover efekt */
+.hero-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+/* Tytuł karty */
+.hero-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+/* Opis */
+.hero-card p {
+    font-size: 0.9rem;
+    color: #000000;
+    margin: 0;
+}
+
+
+/* =============================================================
+   WIDOKI LOGOWANIA / REJESTRACJI
+   ============================================================= */
+
+/* Centruje #authBox na ekranie (z uwzględnieniem navbaru) */
+.auth-main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 64px;
+}
+
+/* Biały kontener formularza */
+#authBox {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    width: 350px;
+    transition: all 0.3s ease;
+}
+
+/* Tytuł sekcji */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Formularz */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Inputy */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    padding: 12px 15px;
+    margin: 8px 0 4px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    font-size: 14px;
+    transition: border 0.3s;
+}
+
+input:focus {
+    border-color: #007BFF;
+}
+
+/* Błąd pola */
+input.input-error {
+    border: 2px solid red;
+    background-color: #ffe6e6;
+}
+
+/* Przycisk */
+input[type="submit"],
+button {
+    padding: 12px 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    background: #007BFF;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background 0.3s;
+    width: 100%;
+}
+
+input[type="submit"]:hover,
+button:hover {
+    background: #0056b3;
+}
+
+/* Tekst pod formularzem */
+p {
+    text-align: center;
+    margin: 15px 0 0;
+    color: #555;
+    font-size: 14px;
+}
+
+/* Błędy */
+.error {
+    color: red;
+    font-size: 12px;
+    display: block;
+    min-height: 16px;
+    margin-bottom: 4px;
+}
+
+/* Linki */
+#loginView p a,
+#registerView p a {
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: 500;
+}
+#loginView p a:hover,
+#registerView p a:hover {
+    text-decoration: underline;
+}

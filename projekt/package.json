@@ -1,0 +1,23 @@
+{
+  "name": "aplikacja-logowanie",
+  "version": "2.0.0",
+  "description": "SPA aplikacja logowania – Express.js + SQLite",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
