@@ -5,7 +5,7 @@
  * Pokazuje wybrany widok i ukrywa pozostałe.
  * @param {'home'|'login'|'register'|'quizzes'|'account'|'daily_quizz'} view – nazwa widoku do pokazania
  */
-function showView(view) {
+function showView(view, add_to_history = true) {
     // Wszystkie widoki i odpowiadające im elementy DOM
     const views = {
         home: document.getElementById('homeView'),
@@ -36,8 +36,11 @@ function showView(view) {
         daily_quizz: '/daily_quizz'
     };
 
-    history.pushState({ view }, '', paths[view]);
-
+     
+    if (add_to_history) {
+        history.pushState({ view }, '', paths[view]);
+    }
+    
     if (view === 'daily_quizz') {
         loadDailyQuiz();
     }
@@ -56,7 +59,7 @@ window.addEventListener('popstate', (e) => {
         'home'
     );
 
-    showView(view);
+    showView(view, false);
 });
 
 
