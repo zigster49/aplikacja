@@ -272,6 +272,11 @@ app.get('/api/daily_quizz', (req, res) => {
     res.json(getDailyQuiz());
 });
 
+//Endponint służący do zwracania listy quizów
+app.get('/api/quizzes', (req, res) => {
+ res.send(dailyQuizzes);
+});
+
 
 
 
