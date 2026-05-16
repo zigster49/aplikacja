@@ -45,9 +45,23 @@ function showView(view, add_to_history = true) {
   }
 }
 
+function startQuiz(id) {
+  //Funkcja do pokazywania quziu po jego id
+  showQuiz(id);
+  history.pushState({ view: "quiz", id }, "", `/quiz/${id}`);
+}
+
 // OBSŁUGA PRZYCISKU WSTECZ / NAPRZÓD PRZEGLĄDARKI
 
 window.addEventListener("popstate", (e) => {
+  const path = window.location.pathname;
+
+  const quizMatch = path.match(/^\/quiz\/(\d+)$/);
+
+  if (quizMatch) {
+    showQuiz(Number(quizMatch[1]), false);
+    return;
+  }
   const view =
     e.state?.view ||
     (window.location.pathname === "/register"
@@ -69,6 +83,12 @@ window.addEventListener("popstate", (e) => {
 
 (function initView() {
   const path = window.location.pathname;
+  const quizMatch = path.match(/^\/quiz\/(\d+)$/);
+
+  if (quizMatch) {
+    showQuiz(Number(quizMatch[1]));
+    return;
+  }
 
   if (path === "/register") showView("register");
   else if (path === "/login") showView("login");
@@ -77,6 +97,107 @@ window.addEventListener("popstate", (e) => {
   else if (path === "/daily_quizz") showView("daily_quizz");
   else showView("home");
 })();
+
+let quizData = null;
+let quizIndex = 0;
+let quizCorrect = 0;
+
+function renderQuiz() {
+  const container = document.getElementById("quizContainer");
+  const q = quizData.questions[quizIndex];
+
+  if (!q) return finishQuiz();
+
+  const options = q.options
+    .map(
+      (o, i) => `
+        <label class="quiz-option">
+            <input type="radio" name="answer" value="${i}">
+            ${o}
+        </label>
+    `,
+    )
+    .join("");
+
+  container.innerHTML = `
+        <div class="daily-quiz-card">
+            <h3>${quizData.title}</h3>
+
+            <p>Pytanie ${quizIndex + 1} / ${quizData.questions.length}</p>
+            <p>${q.question}</p>
+
+            <form id="quizForm">
+                ${options}
+                <button type="submit">Dalej</button>
+            </form>
+
+            <p id="quizFeedback"></p>
+        </div>
+    `;
+
+  document.getElementById("quizForm").addEventListener("submit", handleQuiz);
+}
+function handleQuiz(e) {
+  e.preventDefault();
+
+  const selected = document.querySelector('input[name="answer"]:checked');
+  const feedback = document.getElementById("quizFeedback");
+
+  if (!selected) {
+    feedback.textContent = "Wybierz odpowiedź";
+    feedback.style.color = "red";
+    return;
+  }
+
+  const q = quizData.questions[quizIndex];
+
+  if (Number(selected.value) === q.correctIndex) {
+    quizCorrect++;
+    feedback.textContent = "✔ Dobrze";
+    feedback.style.color = "green";
+  } else {
+    feedback.textContent = "❌ Źle";
+    feedback.style.color = "red";
+  }
+
+  quizIndex++;
+
+  setTimeout(renderQuiz, 600);
+}
+function finishQuiz() {
+  const container = document.getElementById("quizContainer");
+
+  container.innerHTML = `
+        <div class="daily-quiz-card">
+            <h3>Wynik</h3>
+            <p>${quizCorrect} / ${quizData.questions.length}</p>
+        </div>
+    `;
+}
+async function showQuiz(id, addHistory = true) {
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = "<p>Ładowanie quizu...</p>";
+
+  showView("quiz", false);
+
+  if (addHistory) {
+    history.pushState({ view: "quiz", id }, "", `/quiz/${id}`);
+  }
+
+  try {
+    const res = await fetch(`/api/quizzes/${id}`);
+    if (!res.ok) throw new Error();
+
+    quizData = await res.json();
+
+    quizIndex = 0;
+    quizCorrect = 0;
+
+    renderQuiz();
+  } catch (err) {
+    container.innerHTML = "<p>Błąd ładowania quizu</p>";
+  }
+}
 
 let dailyQuizData = null;
 let dailyQuizTimerInterval = null;
