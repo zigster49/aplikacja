@@ -282,7 +282,23 @@ app.get("/api/daily_quizz", (req, res) => {
 
 //Endponint służący do zwracania listy quizów
 app.get("/api/quizzes", (req, res) => {
-  res.send(dailyQuizzes);
+  res.json(dailyQuizzes);
+});
+
+app.get("/api/quizzes/:id", (req, res) => {
+  //endpoint do zwracania pojedynczego quizu po id
+  const id = Number(req.params.id);
+
+  const quiz = dailyQuizzes[id];
+
+  if (!quiz) {
+    return res.status(404).json({ message: "Quiz nie istnieje" });
+  }
+
+  res.json({
+    id,
+    ...quiz,
+  });
 });
 
 // TRASY STRON (HTML)
