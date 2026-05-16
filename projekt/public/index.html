@@ -1,192 +1,268 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quizzes</title>
 
- 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
-   
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-
-<!-- ===== NAWIGACJA =====
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <!-- ===== NAWIGACJA =====
      Widoczna na każdym widoku (home, logowanie, rejestracja).
      Linki w nav wywołują showView() zamiast przeładowywać stronę. -->
-<nav id="navbar">
-    <!-- Logo / nazwa aplikacji -->
-    <a href="#" class="nav-logo" onclick="showView('home'); return false;">Quizzes</a>
+    <nav id="navbar">
+      <!-- Logo / nazwa aplikacji -->
+      <a
+        href="#"
+        class="nav-logo"
+        onclick="
+          showView('home');
+          return false;
+        "
+        >Quizzes</a
+      >
 
-    <!-- Linki nawigacyjne -->
-    <ul class="nav-links">
-        <li><a href="#" class="nav-btn" onclick="showView('login'); return false;">Logowanie</a></li>
-        <li><a href="#" class="nav-btn" onclick="showView('register'); return false;">Zarejestruj się</a></li>
-        <li><a href="#" class="nav-btn" onclick="showView('quizzes'); return false;">Quizy</a></li>
-        <li><a href="#" class="nav-btn" onclick="showView('account'); return false;">Konto</a></li>
-    </ul>
-</nav>
+      <!-- Linki nawigacyjne -->
+      <ul class="nav-links">
+        <li>
+          <a
+            href="#"
+            class="nav-btn"
+            onclick="
+              showView('login');
+              return false;
+            "
+            >Logowanie</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="nav-btn"
+            onclick="
+              showView('register');
+              return false;
+            "
+            >Zarejestruj się</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="nav-btn"
+            onclick="
+              showView('quizzes');
+              return false;
+            "
+            >Quizy</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="nav-btn"
+            onclick="
+              showView('account');
+              return false;
+            "
+            >Konto</a
+          >
+        </li>
+      </ul>
+    </nav>
 
-<!-- ===== WIDOK: STRONA GŁÓWNA =====
+    <!-- ===== WIDOK: STRONA GŁÓWNA =====
      Domyślnie widoczny. JS ukrywa go i pokazuje formularze
      po kliknięciu w linki nawigacyjne. -->
-<div id="homeView">
-    <main class="hero">
-        <h1>Witaj w <span>Quizzes</span></h1> <br>
-        
-        <!-- CTA (najważniejsze akcje) -->
+    <div id="homeView">
+      <main class="hero">
+        <h1>Witaj w <span>Quizzes</span></h1>
+
         <div class="hero-cards">
-    <div class="hero-card" onclick="showView('daily_quizz')">
-        <h3>📅 Daily Quiz</h3>
-        <p>Rozwiąż dzisiejszy quiz i sprawdź swoją wiedzę</p>
+          <div class="hero-card" onclick="showView('daily_quizz')">
+            <h3>📅 Daily Quiz</h3>
+            <p>Rozwiąż dzisiejszy quiz i sprawdź swoją wiedzę</p>
+          </div>
+
+          <div class="hero-card" onclick="showView('quizzes')">
+            <h3>📚 Wszystkie quizy</h3>
+            <p>Przejdź do pełnej bazy quizów</p>
+          </div>
+        </div>
+      </main>
     </div>
 
-    <div class="hero-card" onclick="showView('quizzes')">
-        <h3>📚 Wszystkie quizy</h3>
-        <p>Przejdź do pełnej bazy quizów</p>
-    </div>
-</div>
-</div>
-    </main>
-</div>
-
-<!-- ===== WIDOK: LOGOWANIE =====
+    <!-- ===== WIDOK: LOGOWANIE =====
      Domyślnie ukryty; pokazywany przez showView('login'). -->
-<div id="loginView" style="display:none;">
-    <main class="auth-main">
+    <div id="loginView" style="display: none">
+      <main class="auth-main">
         <div id="authBox">
-            <h2>Logowanie</h2>
+          <h2>Logowanie</h2>
 
-            <form id="loginForm">
-                <!-- Pole loginu -->
-                <input
-                    type="text"
-                    name="login"
-                    placeholder="Login"
-                    autocomplete="username"
-                    
-                />
-                <!-- Komunikat błędu loginu (wypełniany przez JS) -->
-                <span class="error" id="loginError"></span>
+          <form id="loginForm">
+            <!-- Pole loginu -->
+            <input
+              type="text"
+              name="login"
+              placeholder="Login"
+              autocomplete="username"
+            />
+            <!-- Komunikat błędu loginu (wypełniany przez JS) -->
+            <span class="error" id="loginError"></span>
 
-                <!-- Pole hasła -->
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Hasło"
-                    autocomplete="current-password"
-                    
-                />
-                <!-- Komunikat błędu hasła (wypełniany przez JS) -->
-                <span class="error" id="passwordError"></span>
+            <!-- Pole hasła -->
+            <input
+              type="password"
+              name="password"
+              placeholder="Hasło"
+              autocomplete="current-password"
+            />
+            <!-- Komunikat błędu hasła (wypełniany przez JS) -->
+            <span class="error" id="passwordError"></span>
 
-                <input type="submit" value="Zaloguj się">
-            </form>
+            <input type="submit" value="Zaloguj się" />
+          </form>
 
-            <p>Nie masz konta?
-                <a href="#" onclick="showView('register'); return false;">Zarejestruj się</a>
-            </p>
+          <p>
+            Nie masz konta?
+            <a
+              href="#"
+              onclick="
+                showView('register');
+                return false;
+              "
+              >Zarejestruj się</a
+            >
+          </p>
         </div>
-    </main>
-</div>
+      </main>
+    </div>
 
-<!-- ===== WIDOK: REJESTRACJA =====
+    <!-- ===== WIDOK: REJESTRACJA =====
      Domyślnie ukryty; pokazywany przez showView('register'). -->
-<div id="registerView" style="display:none;">
-    <main class="auth-main">
+    <div id="registerView" style="display: none">
+      <main class="auth-main">
         <div id="authBox">
-            <h2>Rejestracja</h2>
+          <h2>Rejestracja</h2>
 
-            <form id="registerForm">
-                <!-- Adres e-mail -->
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="E-mail"
-                    autocomplete="email"
-                    
-                />
-                <span class="error" id="emailError"></span>
-                
-                <input
-                    type="text"
-                    name="name"
-                    placeholder="Imię"
-                   
-                />
-                <span class="error" id="nameError"></span>
-                
-                <input
-                    type="text"
-                    name="login"
-                    placeholder="Login"
-                    autocomplete="username"
-                   
-                />
-                <span class="error" id="loginErrorRegister"></span>
-                <!-- Nowe hasło -->
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Hasło"
-                    
-                    
-                />
-                <span class="error" id="passwordErrorRegister"></span>
-               
-                <input
-                    type="password"
-                    name="repeatPassword"
-                    placeholder="Powtórz hasło"
-                    
-                  
-                />
-                 <span class="error" id="repeatPasswordError"></span>
-                
-                 <input type="submit" value="Utwórz konto">
-            </form>
+          <form id="registerForm">
+            <!-- Adres e-mail -->
+            <input
+              type="email"
+              name="email"
+              placeholder="E-mail"
+              autocomplete="email"
+            />
+            <span class="error" id="emailError"></span>
 
-            <p>Masz już konto?
-                <a href="#" onclick="showView('login'); return false;">Zaloguj się</a>
-            </p>
+            <input type="text" name="name" placeholder="Imię" />
+            <span class="error" id="nameError"></span>
+
+            <input
+              type="text"
+              name="login"
+              placeholder="Login"
+              autocomplete="username"
+            />
+            <span class="error" id="loginErrorRegister"></span>
+            <!-- Nowe hasło -->
+            <input type="password" name="password" placeholder="Hasło" />
+            <span class="error" id="passwordErrorRegister"></span>
+
+            <input
+              type="password"
+              name="repeatPassword"
+              placeholder="Powtórz hasło"
+            />
+            <span class="error" id="repeatPasswordError"></span>
+
+            <input type="submit" value="Utwórz konto" />
+          </form>
+
+          <p>
+            Masz już konto?
+            <a
+              href="#"
+              onclick="
+                showView('login');
+                return false;
+              "
+              >Zaloguj się</a
+            >
+          </p>
         </div>
-    </main>
-</div>
+      </main>
+    </div>
 
-<!--=====Widok quizy======
+    <!--=====Widok quizy======
 Domyślnie ukryty pokazywany przez showView('quizzes')-->
- <div id="quizzesView" style="display: none;">
-    <main class="quizzes_main">
-       <h2>Quizy</h2>
-       
-    </main>
- </div>
+    <div id="quizzesView" style="display: none">
+      <main class="quizzes_main">
+        <h2>Quizy</h2>
+        <div id="quizzesContainer"></div>
 
- <!--=====Widok konta========
+        <script>
+          async function loadQuizzes() {
+            try {
+              const response = await fetch("/api/quizzes");
+              if (!response.ok) {
+                throw new Error("Błąd sieci: " + response.status);
+              }
+              const quizzes = await response.json();
+              const container = document.getElementById("quizzesContainer");
+              container.innerHTML = ""; // Wyczyść zawartość przed dodaniem quizów
+
+              quizzes.forEach((quiz) => {
+                const quizCard = document.createElement("div");
+                quizCard.className = "quiz-card";
+                quizCard.innerHTML = `
+                       <h3>${quiz.title}</h3>
+                       <button onclick="startQuiz(${quiz.id})">Rozpocznij</button>
+                   `;
+
+                container.appendChild(quizCard);
+              });
+            } catch (error) {
+              console.error("Nie można załadować quizów:", error);
+              document.getElementById("quizzesContainer").innerText =
+                "Nie można załadować quizów. Spróbuj ponownie później.";
+            }
+          }
+          loadQuizzes(); // Wywołaj funkcję ładującą quizy po załadowaniu widoku
+        </script>
+      </main>
+    </div>
+
+    <!--=====Widok konta========
 Domyślnie ukryty pokazywany przez showView('account')-->
-<div id="accountView" style="display: none;">
-   <main class="account_main">
-    <h2><b>Twoje Konto</b></h2>
-   </main>
-</div>
+    <div id="accountView" style="display: none">
+      <main class="account_main">
+        <h2><b>Twoje Konto</b></h2>
+      </main>
+    </div>
 
-<!--=======Widok dziennego quizzu=======
+    <!--=======Widok dziennego quizzu=======
 Domyślnie ukryty pokazywany przez showView('daily_quizz')-->
 
-<div id="daily_quizzView" style="display: none;">
-   <main class="daily_quizz_main">
-     <h2 class="daily-quiz-title"><span>Sprawdź swoją wiedzę</span><br>w codziennym quizie</h2>
-     <div id="dailyQuizContainer">
-         <p>Quiz się ładuje...</p>
-     </div>
-   </main>
-</div>
+    <div id="daily_quizzView" style="display: none">
+      <main class="daily_quizz_main">
+        <h2 class="daily-quiz-title">
+          <span>Sprawdź swoją wiedzę</span><br />w codziennym quizie
+        </h2>
+        <div id="dailyQuizContainer">
+          <p>Quiz się ładuje...</p>
+        </div>
+      </main>
+    </div>
 
-
-<script src="/js/main.js"></script>
-</body>
+    <script src="/js/main.js"></script>
+  </body>
 </html>
