@@ -206,37 +206,67 @@
 Domyślnie ukryty pokazywany przez showView('quizzes')-->
     <div id="quizzesView" style="display: none">
       <main class="quizzes_main">
-        <h2>Quizy</h2>
-        <div id="quizzesContainer"></div>
+        <div class="quizzes-header">
+          <h2>📚 Quizy</h2>
+          <p>Wybierz quiz i sprawdź swoją wiedzę</p>
+        </div>
+
+        <div id="quizzesContainer" class="quizzes-grid"></div>
 
         <script>
           async function loadQuizzes() {
             try {
               const response = await fetch("/api/quizzes");
+
               if (!response.ok) {
                 throw new Error("Błąd sieci: " + response.status);
               }
+
               const quizzes = await response.json();
+
               const container = document.getElementById("quizzesContainer");
-              container.innerHTML = ""; // Wyczyść zawartość przed dodaniem quizów
+
+              container.innerHTML = "";
 
               quizzes.forEach((quiz) => {
                 const quizCard = document.createElement("div");
+
                 quizCard.className = "quiz-card";
+
                 quizCard.innerHTML = `
-                       <h3>${quiz.title}</h3>
-                       <button onclick="startQuiz(${quiz.id})">Rozpocznij</button>
-                   `;
+              <div class="quiz-card-content">
+
+                <div class="quiz-top">
+                  <span class="quiz-badge">QUIZ</span>
+                </div>
+
+                <h3>${quiz.title}</h3>
+
+                <p>
+                  Sprawdź swoją wiedzę i zdobądź najlepszy wynik.
+                </p>
+
+                <button class="start-btn" onclick="startQuiz(${quiz.id})">
+                  Rozpocznij
+                </button>
+
+              </div>
+            `;
 
                 container.appendChild(quizCard);
               });
             } catch (error) {
               console.error("Nie można załadować quizów:", error);
-              document.getElementById("quizzesContainer").innerText =
-                "Nie można załadować quizów. Spróbuj ponownie później.";
+
+              document.getElementById("quizzesContainer").innerHTML = `
+            <div class="quiz-error">
+              Nie można załadować quizów.
+            </div>
+          `;
             }
           }
-          loadQuizzes(); // Wywołaj funkcję ładującą quizy po załadowaniu widoku
+
+          loadQuizzes();
         </script>
       </main>
     </div>
