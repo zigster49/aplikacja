@@ -210,7 +210,8 @@ Domyślnie ukryty pokazywany przez showView('account')-->
                     <span class="stat-label">Odznaki</span>
                 </div>
             </div>
-
+                <!-- Przycisk zmiany hasła -->
+            <button class="change-password-btn" onclick="showView('reset_password')">Zmień hasło</button>
             <!-- Przycisk wylogowania -->
             <button class="logout-btn" onclick="handleLogout()">Wyloguj się</button>
 
@@ -228,6 +229,47 @@ Domyślnie ukryty pokazywany przez showView('daily_quizz')-->
          <p>Quiz się ładuje...</p>
      </div>
    </main>
+</div>
+
+<!--=====Widok resetowania hasła========-->
+<div id="reset_passwordView" style="display: none;">
+    <main class="auth-main">
+        <div id="authBox">
+            <h2>Zmiana hasła</h2>
+
+            <form id="resetPasswordForm">
+                <input
+                    type="password"
+                    name="oldPassword"
+                    placeholder="Stare hasło"
+                    autocomplete="current-password"
+                />
+                <span class="error" id="oldPasswordError"></span>
+
+                <input
+                    type="password"
+                    name="newPassword"
+                    placeholder="Nowe hasło"
+                    autocomplete="new-password"
+                />
+                <span class="error" id="newPasswordError"></span>
+
+                <input
+                    type="password"
+                    name="repeatNewPassword"
+                    placeholder="Powtórz nowe hasło"
+                    autocomplete="new-password"
+                />
+                <span class="error" id="repeatNewPasswordError"></span>
+
+                <input type="submit" value="Zmień hasło">
+            </form>
+
+            <p>Wróć do
+                <a href="#" onclick="showView('account'); return false;">konta</a>
+            </p>
+        </div>
+    </main>
 </div>
 
 

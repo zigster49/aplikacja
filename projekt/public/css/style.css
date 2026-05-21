@@ -514,3 +514,23 @@ p {
     background: #e53935;
     color: #fff;
 }
+
+
+.change-password-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #007BFF;
+    background: transparent;
+    color: #007BFF;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin: 0;
+}
+
+.change-password-btn:hover {
+    background: #007BFF;
+    color: #fff;
+}
