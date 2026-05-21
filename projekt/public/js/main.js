@@ -436,3 +436,8 @@ document.getElementById('registerForm')?.addEventListener('submit', async functi
         showError(loginError, 'Nie można połączyć się z serwerem');
     }
 });
+
+function handleLogout() {
+    //  logika wylogowania 
+    showView('home');
+}

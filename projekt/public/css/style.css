@@ -343,3 +343,174 @@ p {
     color: #007BFF;
 }
 
+/* =============================================================
+   WIDOK KONTA
+   ============================================================= */
+
+.account_main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 64px;
+    padding: 80px 24px 40px;
+}
+
+.account-card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Nagłówek – avatar + imię */
+.account-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.account-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.account-info h2 {
+    text-align: left;
+    margin: 0 0 4px;
+    font-size: 1.2rem;
+    color: #222;
+}
+
+.account-login {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* Blok serii */
+.streak-box {
+    background: linear-gradient(135deg, #fff7ed, #fff0e0);
+    border: 1px solid #fde3bb;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.streak-icon {
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.streak-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.streak-count {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #e8710a;
+    line-height: 1;
+}
+
+.streak-label {
+    font-size: 0.8rem;
+    color: #b35c00;
+    margin-top: 2px;
+}
+
+.streak-meta {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.streak-best {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.streak-today {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #e6f4ea;
+    color: #2e7d32;
+}
+
+.streak-today.not-done {
+    background: #fce8e6;
+    color: #c62828;
+}
+
+/* Statystyki */
+.account-stats {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.stat-item {
+    background: #f5f7ff;
+    border: 1px solid #dfe4ff;
+    border-radius: 14px;
+    padding: 14px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #007BFF;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: #666;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* Przycisk wylogowania */
+.logout-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #e53935;
+    background: transparent;
+    color: #e53935;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin: 0;
+}
+
+.logout-btn:hover {
+    background: #e53935;
+    color: #fff;
+}

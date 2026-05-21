@@ -167,10 +167,55 @@ Domyślnie ukryty pokazywany przez showView('quizzes')-->
 
  <!--=====Widok konta========
 Domyślnie ukryty pokazywany przez showView('account')-->
+<!--=====Widok konta========
+Domyślnie ukryty pokazywany przez showView('account')-->
 <div id="accountView" style="display: none;">
-   <main class="account_main">
-    <h2><b>Twoje Konto</b></h2>
-   </main>
+    <main class="account_main">
+        <div class="account-card">
+
+            <!-- Nagłówek z avatarem -->
+            <div class="account-header">
+                <div class="account-avatar">JK</div>
+                <div class="account-info">
+                    <h2>Jan Kowalski</h2>
+                    <span class="account-login">@jan_kowalski</span>
+                </div>
+            </div>
+
+            <!-- Licznik serii daily quiz -->
+            <div class="streak-box">
+                <div class="streak-icon">🔥</div>
+                <div class="streak-details">
+                    <span class="streak-count">7</span>
+                    <span class="streak-label">dni z rzędu</span>
+                </div>
+                <div class="streak-meta">
+                    <span class="streak-best">Rekord: <strong>14</strong></span>
+                    <span class="streak-today completed">✔ Dzisiaj zaliczono</span>
+                </div>
+            </div>
+
+            <!-- Statystyki -->
+            <div class="account-stats">
+                <div class="stat-item">
+                    <span class="stat-value">42</span>
+                    <span class="stat-label">Quizów ukończonych</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">86%</span>
+                    <span class="stat-label">Średni wynik</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">3</span>
+                    <span class="stat-label">Odznaki</span>
+                </div>
+            </div>
+
+            <!-- Przycisk wylogowania -->
+            <button class="logout-btn" onclick="handleLogout()">Wyloguj się</button>
+
+        </div>
+    </main>
 </div>
 
 <!--=======Widok dziennego quizzu=======
