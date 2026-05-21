@@ -13,7 +13,8 @@ function showView(view, add_to_history = true) {
         register: document.getElementById('registerView'),
         quizzes: document.getElementById('quizzesView'),
         account: document.getElementById('accountView'),
-        daily_quizz: document.getElementById('daily_quizzView')
+        daily_quizz: document.getElementById('daily_quizzView'),
+        reset_password: document.getElementById('reset_passwordView')
     };
 
     // Ukrywamy wszystkie widoki
@@ -33,7 +34,8 @@ function showView(view, add_to_history = true) {
         register: '/register',
         quizzes: '/quizzes',
         account: '/account',
-        daily_quizz: '/daily_quizz'
+        daily_quizz: '/daily_quizz',
+        reset_password: '/reset_password'
     };
 
      
@@ -73,6 +75,7 @@ window.addEventListener('popstate', (e) => {
     else if (path === '/quizzes') showView('quizzes');
     else if (path === '/account') showView('account');
     else if (path === '/daily_quizz') showView('daily_quizz');
+    else if (path === '/reset_password') showView('reset_password');
     else showView('home');
 })();
 
@@ -444,3 +447,47 @@ function handleLogout() {
     //  logika wylogowania 
     showView('home');
 }
+
+//Obsługa formularza zmiany hasła 
+document.getElementById('resetPasswordForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const oldPasswordError = document.getElementById('oldPasswordError');
+    const newPasswordError = document.getElementById('newPasswordError');
+    const repeatNewPasswordError = document.getElementById('repeatNewPasswordError');
+
+    oldPasswordError.textContent = '';
+    newPasswordError.textContent = '';
+    repeatNewPasswordError.textContent = '';
+
+    const formData = new FormData(this);
+    const oldPassword = formData.get('oldPassword');
+    const newPassword = formData.get('newPassword');
+    const repeatNewPassword = formData.get('repeatNewPassword');
+
+    let valid = true;
+
+    if (!oldPassword) {
+        oldPasswordError.textContent = 'Podaj stare hasło';
+        valid = false;
+    }
+
+    if (!newPassword) {
+        newPasswordError.textContent = 'Podaj nowe hasło';
+        valid = false;
+    } else if (newPassword.length < 6) {
+        newPasswordError.textContent = 'Hasło musi mieć minimum 6 znaków';
+        valid = false;
+    }
+
+    if (!repeatNewPassword) {
+        repeatNewPasswordError.textContent = 'Powtórz nowe hasło';
+        valid = false;
+    } else if (newPassword && newPassword !== repeatNewPassword) {
+        repeatNewPasswordError.textContent = 'Hasła nie są takie same';
+        valid = false;
+    }
+
+    if (!valid) return;
+
+});
