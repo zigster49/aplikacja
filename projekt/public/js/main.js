@@ -1,9 +1,8 @@
-
 // PRZEŁĄCZANIE WIDOKÓW
 
 /**
  * Pokazuje wybrany widok i ukrywa pozostałe.
- * @param {'home'|'login'|'register'|'quizzes'|'account'|'daily_quizz'} view – nazwa widoku do pokazania
+ * @param {'home'|'login'|'register'|'quizzes'|'account'|'daily_quizz'|'reset_password'} view – nazwa widoku do pokazania
  */
 function showView(view, add_to_history = true) {
     // Wszystkie widoki i odpowiadające im elementy DOM
@@ -58,6 +57,7 @@ window.addEventListener('popstate', (e) => {
         window.location.pathname === '/quizzes' ? 'quizzes' :
         window.location.pathname === '/account' ? 'account' :
         window.location.pathname === '/daily_quizz' ? 'daily_quizz' :
+        window.location.pathname === '/reset_password' ? 'reset_password' :
         'home'
     );
 
@@ -84,27 +84,94 @@ let dailyQuizTimerInterval = null;
 let currentDailyQuestionIndex = 0;
 let dailyQuizCorrectCount = 0;
 
-// Pobiera quiz dnia z backendu i uruchamia jego wyświetlanie.
+// Pobiera quiz dnia z Open Trivia DB (z cache w localStorage na cały dzień) i uruchamia jego wyświetlanie.
 async function loadDailyQuiz() {
     const container = document.getElementById('dailyQuizContainer');
     if (!container) return;
 
     container.innerHTML = '<p>Ładuję quiz dnia...</p>';
 
+    // Sprawdź czy mamy już dzisiejszy quiz w localStorage
+    const today = new Date().toISOString().slice(0, 10); // "2025-01-23"
+    const cached = localStorage.getItem('dailyQuiz');
+
+    if (cached) {
+        try {
+            const { date, quiz } = JSON.parse(cached);
+            if (date === today) {
+                // W tym samym dniu — użyj cache
+                dailyQuizData = quiz;
+                renderDailyQuiz(quiz);
+                return;
+            }
+        } catch {
+            localStorage.removeItem('dailyQuiz');
+        }
+    }
+
+    // Nowy dzień lub brak cache — pobranie 10 losowych poytań z Open Trivia DB
     try {
-        const response = await fetch('/api/daily_quizz');
+        const response = await fetch('https://opentdb.com/api.php?amount=10&type=multiple');
+
         if (!response.ok) {
             container.innerHTML = '<p>Nie udało się pobrać quizu.</p>';
             return;
         }
 
-        const quiz = await response.json();
+        const data = await response.json();
+
+        if (data.response_code !== 0 || !data.results?.length) {
+            container.innerHTML = '<p>Nie udało się pobrać quizu. Spróbuj ponownie.</p>';
+            return;
+        }
+
+        // Mapuje format Open Trivia DB → format aplikacji
+        const questions = data.results.map(q => {
+            // Mieszamy poprawną odpowiedź z błędnymi
+            const options = [...q.incorrect_answers, q.correct_answer]
+                .sort(() => Math.random() - 0.5)
+                .map(opt => decodeHTMLEntities(opt));
+
+            const correctIndex = options.indexOf(decodeHTMLEntities(q.correct_answer));
+
+            return {
+                question: decodeHTMLEntities(q.question),
+                options,
+                correctIndex
+            };
+        });
+
+        const quiz = {
+            title: 'Quiz Dnia',
+            questions,
+            nextQuizAt: getNextMidnight()
+        };
+
+        // Zapisz w localStorage z dzisiejszą datą
+        localStorage.setItem('dailyQuiz', JSON.stringify({ date: today, quiz }));
+
         dailyQuizData = quiz;
         renderDailyQuiz(quiz);
+
     } catch (err) {
         console.error('Błąd pobierania quizu:', err);
         container.innerHTML = '<p>Nie można pobrać quizu. Spróbuj ponownie.</p>';
     }
+}
+
+// Odkodowuje HTML entities zwracane przez Open Trivia DB (np. &amp; → &)
+function decodeHTMLEntities(text) {
+    const el = document.createElement('textarea');
+    el.innerHTML = text;
+    return el.value;
+}
+
+// Zwraca datę następnej północy (reset quizu o 00:00)
+function getNextMidnight() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow.toISOString();
 }
 
 // Renderuje stronę quizu i przygotowuje pierwszy zestaw pytań.
@@ -443,23 +510,22 @@ document.getElementById('registerForm')?.addEventListener('submit', async functi
     }
 });
 
-function handleLogout() {
-    //  logika wylogowania 
-    showView('home');
-}
 
-//Obsługa formularza zmiany hasła 
+// formularz zmiany hasła (bez fetch — TODO: podpiąć /api/change_password)
+
 document.getElementById('resetPasswordForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    // Spany błędów
     const oldPasswordError = document.getElementById('oldPasswordError');
     const newPasswordError = document.getElementById('newPasswordError');
     const repeatNewPasswordError = document.getElementById('repeatNewPasswordError');
 
-    oldPasswordError.textContent = '';
-    newPasswordError.textContent = '';
-    repeatNewPasswordError.textContent = '';
+    clearError(oldPasswordError);
+    clearError(newPasswordError);
+    clearError(repeatNewPasswordError);
 
+    // Dane formularza
     const formData = new FormData(this);
     const oldPassword = formData.get('oldPassword');
     const newPassword = formData.get('newPassword');
@@ -468,26 +534,38 @@ document.getElementById('resetPasswordForm')?.addEventListener('submit', async f
     let valid = true;
 
     if (!oldPassword) {
-        oldPasswordError.textContent = 'Podaj stare hasło';
+        showError(oldPasswordError, 'Podaj stare hasło');
         valid = false;
     }
 
     if (!newPassword) {
-        newPasswordError.textContent = 'Podaj nowe hasło';
+        showError(newPasswordError, 'Podaj nowe hasło');
         valid = false;
     } else if (newPassword.length < 6) {
-        newPasswordError.textContent = 'Hasło musi mieć minimum 6 znaków';
+        showError(newPasswordError, 'Hasło musi mieć minimum 6 znaków');
         valid = false;
     }
 
     if (!repeatNewPassword) {
-        repeatNewPasswordError.textContent = 'Powtórz nowe hasło';
+        showError(repeatNewPasswordError, 'Powtórz nowe hasło');
         valid = false;
     } else if (newPassword && newPassword !== repeatNewPassword) {
-        repeatNewPasswordError.textContent = 'Hasła nie są takie same';
+        showError(repeatNewPasswordError, 'Hasła nie są takie same');
         valid = false;
     }
 
-    if (!valid) return;
+    if (!valid) //udana zmiana hasła
+        return;
 
+    // TODO
+    this.reset();
+    showView('account');
 });
+
+
+// Wylogowanie (narazie bez logiki)
+
+function handleLogout() {
+    // TODO: logika wylogowania (czyszczenie sesji/tokenu)
+    showView('home');
+}
