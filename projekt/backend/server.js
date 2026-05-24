@@ -1,4 +1,4 @@
-
+﻿
 
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -129,31 +129,17 @@ const dailyQuizzes = [
     }
 ];
 
-function getDailyQuiz() {
-    const now = new Date();
-    const intervalMs = 24 * 60 * 60 * 1000;
-    const intervalStart = Math.floor(now.getTime() / intervalMs) * intervalMs;
-    const dayIndex = Math.floor(intervalStart / intervalMs);
-    const quizIndex = (dayIndex * 17 + 23) % dailyQuizzes.length; //Wzór na zmianę kolejności quizów co dzień, 17 i 23 to dowolne liczby pierwsze
-    const quiz = dailyQuizzes[quizIndex];
-    const nextQuizAt = new Date(intervalStart + intervalMs).toISOString();
 
-    return {
-        ...quiz,
-        nextQuizAt
-    };
-}
 
 const app = express();
 
 
-// Parsowanie ciała żądania jako JSON 
 app.use(express.json());
 
-// Zezwolenie na żądania z innych domen 
+
 app.use(cors());
 
-// Serwowanie plików statycznych z katalogu public/
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 
@@ -165,7 +151,7 @@ const apiRouter = express.Router();
 
 // POST /api/login 
 // Sprawdza dane logowania użytkownika.
-// Oczekuje w ciele żądania: { login, password }
+
 apiRouter.post('/login', async (req, res) => {
     const { login, password } = req.body;
 
@@ -185,7 +171,7 @@ apiRouter.post('/login', async (req, res) => {
                 return res.status(500).json({ message: 'Błąd serwera' });
             }
 
-            // Użytkownik o podanym loginie nie istnieje
+            
             if (!user) {
                 return res.status(400).json({ message: 'Nie znaleziono użytkownika' });
             }
@@ -206,7 +192,7 @@ apiRouter.post('/login', async (req, res) => {
 
 // POST /api/register 
 // Rejestruje nowego użytkownika.
-// Oczekuje w ciele żądania: { email, name, login, password }
+
 apiRouter.post('/register', async (req, res) => {
     const { email, name, login, password } = req.body;
 
@@ -262,15 +248,9 @@ apiRouter.post('/register', async (req, res) => {
 
 
 // Montujemy router API pod ścieżką /api
-// Wszystkie trasy zdefiniowane powyżej będą dostępne jako:
-//   POST /api/login
-//   POST /api/register
 app.use('/api', apiRouter);
 
-// GET /api/daily_quizz zwraca quiz dnia wybierany co 24h
-app.get('/api/daily_quizz', (req, res) => {
-    res.json(getDailyQuiz());
-});
+
 
 
 
@@ -278,8 +258,7 @@ app.get('/api/daily_quizz', (req, res) => {
 
 // TRASY STRON (HTML)
 
-// Wszystkie trasy GET serwują index.html – jeden plik HTML
-// zawiera stronę główną, logowanie i rejestrację jako widoki SPA.
+
 // JavaScript (main.js) przełącza widoki na podstawie URL.
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
