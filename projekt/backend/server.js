@@ -243,6 +243,44 @@ apiRouter.post('/register', async (req, res) => {
     );
 });
 
+//Pobranie i wyswietlenie quizow z bazy danych TODO
+apiRouter.get('/quizzes', async(req, res) => { 
+});
+
+// Pobranie quizow po jego id TODO
+apiRouter.get('/quizzes/:id', async(req, res) => {
+});
+
+//Utworzenie quizu, dashboard dla admina TODO
+apiRouter.post('/quizzes', async(req, res) => {
+});
+
+//Aktualizacja quizu, dashboard dla admina TODO
+apiRouter.patch('/quizzes/:id', async(req, res) => {
+});
+
+//Usunięcie quizu, dashboard dla admina TODO
+apiRouter.delete('/quizzes/:id', async(req, res) => {
+});
+
+//Pobranie informacji o użytkowniku TODO
+apiRouter.get('/users/:id', async(req, res) => {
+});
+
+//Aktualizacja informacji o użytkowniku, dashboard dla admina TODO
+apiRouter.patch('/users/:id', async(req, res) => {
+});
+
+//Usunięcie użytkownika, dashboard dla admina TODO
+apiRouter.delete('/users/:id', async(req, res) => {
+});
+
+//Resetowanie hasła TODO
+apiRouter.post('/users/:id/reset-password', async(req, res) => {
+});
+
+
+
 
 
 
