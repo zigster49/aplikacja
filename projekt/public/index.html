@@ -15,9 +15,7 @@
 </head>
 <body>
 
-<!-- ===== NAWIGACJA =====
-     Widoczna na każdym widoku (home, logowanie, rejestracja).
-     Linki w nav wywołują showView() zamiast przeładowywać stronę. -->
+<!-- ===== NAWIGACJA ===== -->
 <nav id="navbar">
     <!-- Logo / nazwa aplikacji -->
     <a href="#" class="nav-logo" onclick="showView('home'); return false;">Quizzes</a>
@@ -28,6 +26,9 @@
         <li><a href="#" class="nav-btn" onclick="showView('register'); return false;">Zarejestruj się</a></li>
         <li><a href="#" class="nav-btn" onclick="showView('quizzes'); return false;">Quizy</a></li>
         <li><a href="#" class="nav-btn" onclick="showView('account'); return false;">Konto</a></li>
+        <li id="adminNavItem" style="display: none;">
+    <a href="/dashboard_admin" class="nav-btn">Panel Admina</a>
+</li>
     </ul>
 </nav>
 
@@ -175,7 +176,7 @@ Domyślnie ukryty pokazywany przez showView('account')-->
 
             <!-- Nagłówek z avatarem -->
             <div class="account-header">
-                <div class="account-avatar">JK</div>
+                <div class="account-avatar"></div>
                 <div class="account-info">
                     <h2>Jan Kowalski</h2>
                     <span class="account-login">@jan_kowalski</span>

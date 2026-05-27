@@ -1,12 +1,7 @@
 
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const sqlite3 = require('sqlite3').verbose(); // .verbose() włącza szczegółowe logi błędów
-const path    = require('path');
-
-// Tworzymy połączenie z bazą danych SQLite.
-// path.join(__dirname, 'users.db') buduje ścieżkę względną,
-// dzięki czemu plik users.db zawsze powstaje obok db.js –
-// bez względu na to, z jakiego katalogu uruchomiono serwer.
 const db = new sqlite3.Database(
     path.join(__dirname, 'users.db'),
     (err) => {
@@ -18,24 +13,47 @@ const db = new sqlite3.Database(
     }
 );
 
-// Tworzymy tabelę users, jeśli jeszcze nie istnieje.
-// CREATE TABLE IF NOT EXISTS zapobiega błędowi przy ponownym uruchomieniu serwera.
-// Kolumny:
-//   id       – klucz główny, autoinkrementowany
-//   email    – adres e-mail, musi być unikalny
-//   name     – wyświetlana nazwa użytkownika
-//   login    – login, musi być unikalny
-//   password – zahashowane hasło (bcrypt)
-db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-        id       INTEGER PRIMARY KEY AUTOINCREMENT,
-        email    TEXT UNIQUE NOT NULL,
-        name     TEXT        NOT NULL,
-        login    TEXT UNIQUE NOT NULL,
-        password TEXT        NOT NULL
-    )
-`);
+// Włączenie obsługi FOREIGN KEY w SQLite
+db.serialize(() => {
 
-// Eksportujemy instancję bazy, aby inne moduły mogły
-// wykonywać zapytania (db.get, db.run, db.all itp.)
+    db.run(`PRAGMA foreign_keys = ON`);
+
+    // =========================
+    // TABELA ROLES
+    // =========================
+    db.run(`
+        CREATE TABLE IF NOT EXISTS roles (
+            id   INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL
+        )
+    `);
+
+    // Dodanie domyślnych ról
+    db.run(`
+        INSERT OR IGNORE INTO roles (id, name)
+        VALUES 
+            (1, 'admin'),
+            (2, 'user')
+    `);
+
+   
+    // TABELA USERS
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+            id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            email    TEXT UNIQUE NOT NULL,
+            name     TEXT        NOT NULL,
+            login    TEXT UNIQUE NOT NULL,
+            password TEXT        NOT NULL,
+
+            -- relacja do roles
+            role_id  INTEGER NOT NULL DEFAULT 2,
+
+            FOREIGN KEY (role_id) REFERENCES roles(id)
+        )
+    `);
+
+});
+
 module.exports = db;

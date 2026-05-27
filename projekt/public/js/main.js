@@ -1,3 +1,5 @@
+let currentUserId = null; // Przechowuje ID aktualnie zalogowanego użytkownika 
+
 // PRZEŁĄCZANIE WIDOKÓW
 
 /**
@@ -5,6 +7,11 @@
  * @param {'home'|'login'|'register'|'quizzes'|'account'|'daily_quizz'|'reset_password'} view – nazwa widoku do pokazania
  */
 function showView(view, add_to_history = true) {
+    // OCHRONA: Jeśli widok wymaga zalogowania, a użytkownik jest niezalogowany -> przekieruj na logowanie
+    if ((view === 'account' || view === 'reset_password') && !currentUserId) {
+        view = 'login';
+    }
+
     // Wszystkie widoki i odpowiadające im elementy DOM
     const views = {
         home: document.getElementById('homeView'),
@@ -37,11 +44,10 @@ function showView(view, add_to_history = true) {
         reset_password: '/reset_password'
     };
 
-     
     if (add_to_history) {
         history.pushState({ view }, '', paths[view]);
     }
-    
+
     if (view === 'daily_quizz') {
         loadDailyQuiz();
     }
@@ -65,41 +71,361 @@ window.addEventListener('popstate', (e) => {
 });
 
 
-// INIT VIEW
+// INIT VIEW – uruchamiane przy załadowaniu strony
 
-(function initView() {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Najpierw czekamy na sprawdzenie sesji (aby zaktualizować status i zmienną currentUserId)
+    await checkSession();
+
+    // 2. Potem pokaż odpowiedni widok na podstawie URL oraz uprawnień
     const path = window.location.pathname;
+    
+    if (path === '/register') showView('register', false);
+    else if (path === '/login') showView('login', false);
+    else if (path === '/quizzes') showView('quizzes', false);
+    else if (path === '/account') {
+        if (currentUserId) {
+            showView('account', false);
+        } else {
+            // Chroniony ednpoint, jesli uzytnik nie jest zalogowany, przekieruj na logowanie
+            history.replaceState({ view: 'login' }, '', '/login');
+            showView('login', false);
+        }
+    }
+    else if (path === '/daily_quizz') showView('daily_quizz', false);
+    else if (path === '/reset_password') {
+        if (currentUserId) {
+            showView('reset_password', false);
+        } else {
+            history.replaceState({ view: 'login' }, '', '/login');
+            showView('login', false);
+        }
+    }
+    else showView('home', false);
+});
 
-    if (path === '/register') showView('register');
-    else if (path === '/login') showView('login');
-    else if (path === '/quizzes') showView('quizzes');
-    else if (path === '/account') showView('account');
-    else if (path === '/daily_quizz') showView('daily_quizz');
-    else if (path === '/reset_password') showView('reset_password');
-    else showView('home');
-})();
+
+// SPRAWDZANIE SESJI (CZY ZALOGOWANY)
+
+async function checkSession() {
+    try {
+        const response = await fetch('/api/me', {
+            method: 'GET',
+            credentials: 'include' // Wysyła ciasteczka sesyjne do serwera
+        });
+
+        const data = await response.json();
+        const navLinks = document.querySelector('.nav-links');
+
+        if (data.loggedIn) {
+            currentUserId = data.userId; // Zapisz ID zalogowanego użytkownika
+            
+            // Pokaż linki dla zalogowanych TODO dac ifa czy admin 
+            if (navLinks) {
+                navLinks.innerHTML = `
+                    <li><a href="#" class="nav-btn" onclick="showView('quizzes'); return false;">Quizy</a></li>
+                    <li><a href="#" class="nav-btn" onclick="showView('account'); return false;">Konto</a></li>
+                    <li><a href="/dashboard_admin" class="nav-btn">Panel Admina</a></li> 
+                `;
+            }
+
+            // Znajdowanie elementów w widoku konta i dynamiczna aktualizacja
+            const accountNameH2 = document.querySelector('.account-info h2');
+            const accountLoginSpan = document.querySelector('.account-login');
+            const accountEmailP = document.querySelector('.account-email');
+
+            if (accountNameH2) accountNameH2.textContent = data.name; // Wstawia Imię
+            if (accountLoginSpan) accountLoginSpan.textContent = `@${data.login}`; // Wstawia Login z małpą
+            if (accountEmailP) accountEmailP.textContent = data.email; // Wstawia Email
+
+        } else {
+            currentUserId = null; // Brak aktywnej sesji
+            // Pokaż linki dla niezalogowanych
+            if (navLinks) {
+                navLinks.innerHTML = `
+                    <li><a href="#" class="nav-btn" onclick="showView('login'); return false;">Logowanie</a></li>
+                    <li><a href="#" class="nav-btn" onclick="showView('register'); return false;">Zarejestruj się</a></li>
+                    <li><a href="#" class="nav-btn" onclick="showView('quizzes'); return false;">Quizy</a></li>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Błąd podczas sprawdzania sesji:', error);
+        currentUserId = null;
+    }
+}
+
+
+// WYŚWIETLANIE / CZYSZCZENIE BŁĘDÓW
+
+function showError(el, msg) {
+    if (el) el.textContent = msg;
+}
+
+function clearError(el) {
+    if (el) el.textContent = '';
+}
+
+function clearLoginErrors() {
+    clearError(document.getElementById('loginError'));
+    clearError(document.getElementById('passwordError'));
+}
+
+function clearRegisterErrors() {
+    clearError(document.getElementById('emailError'));
+    clearError(document.getElementById('nameError'));
+    clearError(document.getElementById('loginErrorRegister'));
+    clearError(document.getElementById('passwordErrorRegister'));
+    clearError(document.getElementById('repeatPasswordError'));
+}
+
+
+// FORMULARZ LOGOWANIA
+
+document.getElementById('loginForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    clearLoginErrors();
+
+    const loginError = document.getElementById('loginError');
+    const passwordError = document.getElementById('passwordError');
+
+    const login = this.login.value.trim();
+    const password = this.password.value;
+
+    let valid = true;
+
+    if (!login) {
+        showError(loginError, 'Podaj login');
+        valid = false;
+    }
+
+    if (!password) {
+        showError(passwordError, 'Podaj hasło');
+        valid = false;
+    }
+
+    if (!valid) return;
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, password }),
+            credentials: 'include' // Krytyczne dla ustanowienia sesji
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showError(passwordError, data.message || 'Niepoprawne dane logowania');
+            return;
+        }
+
+        // Sukces logowania
+        this.reset();
+        await checkSession(); // Odśwież nawigację i dane użytkownika
+        showView('home');
+
+    } catch (err) {
+        console.error('Błąd sieci:', err);
+        showError(passwordError, 'Nie można połączyć się z serwerem');
+    }
+});
+
+
+// FORMULARZ REJESTRACJI
+
+document.getElementById('registerForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    clearRegisterErrors();
+
+    const emailError = document.getElementById('emailError');
+    const nameError = document.getElementById('nameError');
+    const loginError = document.getElementById('loginErrorRegister');
+    const passwordError = document.getElementById('passwordErrorRegister');
+    const repeatPasswordError = document.getElementById('repeatPasswordError');
+
+    const email = this.email.value.trim();
+    const name = this.name.value.trim();
+    const login = this.login.value.trim();
+    const password = this.password.value;
+    const repeatPassword = this.repeatPassword.value;
+
+    let valid = true;
+
+    if (!email) {
+        showError(emailError, 'Podaj email');
+        valid = false;
+    }
+
+    if (!name) {
+        showError(nameError, 'Podaj imię');
+        valid = false;
+    }
+
+    if (!login) {
+        showError(loginError, 'Podaj login');
+        valid = false;
+    }
+
+    if (!password) {
+        showError(passwordError, 'Podaj hasło');
+        valid = false;
+    } else if (password.length < 6) {
+        showError(passwordError, 'Hasło musi mieć minimum 6 znaków');
+        valid = false;
+    }
+
+    if (!repeatPassword) {
+        showError(repeatPasswordError, 'Powtórz hasło');
+        valid = false;
+    } else if (password && password !== repeatPassword) {
+        showError(repeatPasswordError, 'Hasła nie są takie same');
+        valid = false;
+    }
+
+    if (!valid) return;
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, name, login, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showError(loginError, data.message || 'Błąd rejestracji');
+            return;
+        }
+
+        // Sukces rejestracji
+        this.reset();
+        showView('login');
+
+    } catch (err) {
+        console.error('Błąd sieci:', err);
+        showError(loginError, 'Nie można połączyć się z serwerem');
+    }
+});
+
+
+// FORMULARZ ZMIANY HASŁA
+
+document.getElementById('resetPasswordForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const oldPasswordError = document.getElementById('oldPasswordError');
+    const newPasswordError = document.getElementById('newPasswordError');
+    const repeatNewPasswordError = document.getElementById('repeatNewPasswordError');
+
+    clearError(oldPasswordError);
+    clearError(newPasswordError);
+    clearError(repeatNewPasswordError);
+
+    const oldPassword = this.oldPassword.value;
+    const newPassword = this.newPassword.value;
+    const repeatNewPassword = this.repeatNewPassword.value;
+
+    let valid = true;
+
+    if (!oldPassword) {
+        showError(oldPasswordError, 'Podaj stare hasło');
+        valid = false;
+    }
+
+    if (!newPassword) {
+        showError(newPasswordError, 'Podaj nowe hasło');
+        valid = false;
+    } else if (newPassword.length < 6) {
+        showError(newPasswordError, 'Hasło musi mieć minimum 6 znaków');
+        valid = false;
+    }
+
+    if (!repeatNewPassword) {
+        showError(repeatNewPasswordError, 'Powtórz nowe hasło');
+        valid = false;
+    } else if (newPassword && newPassword !== repeatNewPassword) {
+        showError(repeatNewPasswordError, 'Hasła nie są takie same');
+        valid = false;
+    }
+
+    if (!valid) return;
+
+    // Zabezpieczenie przed próbą zmiany hasła bez aktywnej sesji
+    if (!currentUserId) {
+        showError(repeatNewPasswordError, 'Błąd autoryzacji. Zaloguj się ponownie.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users/${currentUserId}/reset-password`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldPassword, newPassword }) // Wysyłamy stare i nowe hasło
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showError(repeatNewPasswordError, data.message || 'Nie udało się zmienić hasła.');
+            return;
+        }
+
+        // Sukces zmiany hasła
+        this.reset();
+        showView('account');
+        alert('Hasło zostało zmienione pomyślnie!');
+
+    } catch (err) {
+        console.error('Błąd komunikacji z serwerem:', err);
+        showError(repeatNewPasswordError, 'Nie można połączyć się z serwerem.');
+    }
+});
+
+
+// WYLOGOWANIE
+
+async function handleLogout() {
+    try {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include' // Krytyczne dla usunięcia sesji
+        });
+
+        if (response.ok) {
+            await checkSession(); // Zaktualizuj UI (wyczyści dane sesji i podmieni menu)
+            showView('home');
+        }
+    } catch (error) {
+        console.error('Błąd podczas wylogowywania:', error);
+    }
+}
+
+
+// DAILY QUIZ
 
 let dailyQuizData = null;
 let dailyQuizTimerInterval = null;
 let currentDailyQuestionIndex = 0;
 let dailyQuizCorrectCount = 0;
 
-// Pobiera quiz dnia z Open Trivia DB (z cache w localStorage na cały dzień) i uruchamia jego wyświetlanie.
 async function loadDailyQuiz() {
     const container = document.getElementById('dailyQuizContainer');
     if (!container) return;
 
     container.innerHTML = '<p>Ładuję quiz dnia...</p>';
 
-    // Sprawdź czy mamy już dzisiejszy quiz w localStorage
-    const today = new Date().toISOString().slice(0, 10); // "2025-01-23"
+    const today = new Date().toISOString().slice(0, 10);
     const cached = localStorage.getItem('dailyQuiz');
 
     if (cached) {
         try {
             const { date, quiz } = JSON.parse(cached);
             if (date === today) {
-                // W tym samym dniu — użyj cache
                 dailyQuizData = quiz;
                 renderDailyQuiz(quiz);
                 return;
@@ -109,7 +435,6 @@ async function loadDailyQuiz() {
         }
     }
 
-    // Nowy dzień lub brak cache — pobranie 10 losowych poytań z Open Trivia DB
     try {
         const response = await fetch('https://opentdb.com/api.php?amount=10&type=multiple');
 
@@ -125,9 +450,7 @@ async function loadDailyQuiz() {
             return;
         }
 
-        // Mapuje format Open Trivia DB → format aplikacji
         const questions = data.results.map(q => {
-            // Mieszamy poprawną odpowiedź z błędnymi
             const options = [...q.incorrect_answers, q.correct_answer]
                 .sort(() => Math.random() - 0.5)
                 .map(opt => decodeHTMLEntities(opt));
@@ -147,7 +470,6 @@ async function loadDailyQuiz() {
             nextQuizAt: getNextMidnight()
         };
 
-        // Zapisz w localStorage z dzisiejszą datą
         localStorage.setItem('dailyQuiz', JSON.stringify({ date: today, quiz }));
 
         dailyQuizData = quiz;
@@ -159,7 +481,6 @@ async function loadDailyQuiz() {
     }
 }
 
-// Odkodowuje HTML entities zwracane przez Open Trivia DB (np. &amp; → &)
 function decodeHTMLEntities(text) {
     const el = document.createElement('textarea');
     el.innerHTML = text;
@@ -174,7 +495,6 @@ function getNextMidnight() {
     return tomorrow.toISOString();
 }
 
-// Renderuje stronę quizu i przygotowuje pierwszy zestaw pytań.
 function renderDailyQuiz(quiz) {
     const container = document.getElementById('dailyQuizContainer');
     if (!container) return;
@@ -193,7 +513,6 @@ function renderDailyQuiz(quiz) {
     showDailyQuizQuestion();
 }
 
-// Pokazuje aktualne pytanie oraz formularz z opcjami.
 function showDailyQuizQuestion() {
     const container = document.getElementById('dailyQuizQuestionContainer');
     if (!container || !dailyQuizData) return;
@@ -223,7 +542,6 @@ function showDailyQuizQuestion() {
     document.getElementById('dailyQuizForm')?.addEventListener('submit', handleDailyQuizSubmit);
 }
 
-// Obsługuje odpowiedź użytkownika, aktualizuje wynik i przechodzi do kolejnego pytania.
 function handleDailyQuizSubmit(event) {
     event.preventDefault();
     const feedback = document.getElementById('dailyQuizFeedback');
@@ -265,7 +583,6 @@ function handleDailyQuizSubmit(event) {
     }
 }
 
-// Kończy quiz i pokazuje tylko wynik z timerem do następnego quizu.
 function finishDailyQuiz() {
     const container = document.getElementById('dailyQuizContainer');
     if (!container || !dailyQuizData) return;
@@ -311,261 +628,4 @@ function startDailyQuizCountdown(nextQuizAt, element) {
 
     updateTimer();
     dailyQuizTimerInterval = setInterval(updateTimer, 1000);
-}
-
-
-// Wyświetla komunikat błędu w podanym elemencie.
-function showError(el, msg) {
-    if (el) el.textContent = msg;
-}
-
-// Czyści tekst błędu 
-function clearError(el) {
-    if (el) el.textContent = '';
-}
-
-// Czyści błędy logowania
-function clearLoginErrors() {
-    clearError(document.getElementById('loginError'));
-    clearError(document.getElementById('passwordError'));
-}
-
-//Czyści błędy rejestarcji
-function clearRegisterErrors() {
-    clearError(document.getElementById('emailError'));
-    clearError(document.getElementById('nameError'));
-    clearError(document.getElementById('loginErrorRegister'));
-    clearError(document.getElementById('passwordErrorRegister'));
-    clearError(document.getElementById('repeatPasswordError'));
-}
-
-
-
-// formularz logowanie fetch do API /api/login
-
-
-document.getElementById('loginForm')?.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    clearLoginErrors();
-
-    const loginError = document.getElementById('loginError');
-    const passwordError = document.getElementById('passwordError');
-
-    const formData = new FormData(this);
-
-    const login = formData.get('login')?.trim();
-    const password = formData.get('password');
-
-    let valid = true; //Domyślnie formularz przyjmuje poprawną formę, jeśli zostanie wykryty chodz jeden błąd zmieni wartośc na false i nie przejdzie
-
-  
-    if (!login) {
-        showError(loginError, 'Podaj login');
-        valid = false;
-    }
-
-    
-    if (!password) {
-        showError(passwordError, 'Podaj hasło');
-        valid = false;
-    }
-
-    if (!valid) //Udany login
-    return;
-        
-
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ login, password })
-        });
-
-        const data = await response.json();
-
-        // Błąd logowania z backendu
-        if (!response.ok) {
-            showError(passwordError, data.message || 'Niepoprawne dane logowania');
-            return;
-        }
-
-        // Sukces logowania
-        this.reset();
-        showView('home');
-
-    } catch (err) {
-        console.error('Błąd sieci:', err);
-
-        showError(passwordError, 'Nie można połączyć się z serwerem');
-    }
-});
-
-
-
-
-// formularz rejestarcji fetch do API /api/register (POST)
-
-document.getElementById('registerForm')?.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    clearRegisterErrors();
-
-    // Spany błędów
-    const emailError = document.getElementById('emailError');
-    const nameError = document.getElementById('nameError');
-    const loginError = document.getElementById('loginErrorRegister');
-    const passwordError = document.getElementById('passwordErrorRegister');
-    const repeatPasswordError = document.getElementById('repeatPasswordError');
-
-    // Dane formularza
-    const formData = new FormData(this);
-
-    const email = formData.get('email')?.trim();
-    const name = formData.get('name')?.trim();
-    const login = formData.get('login')?.trim();
-    const password = formData.get('password');
-    const repeatPassword = formData.get('repeatPassword');
-
-    let valid = true;
-
-    
-    if (!email) {
-        showError(emailError, 'Podaj email');
-        valid = false;
-    }
-
-    if (!name) {
-        showError(nameError, 'Podaj imię');
-        valid = false;
-    }
-
-    
-    if (!login) {
-        showError(loginError, 'Podaj login');
-        valid = false;
-    }
-
-   
-    if (!password) {
-        showError(passwordError, 'Podaj hasło');
-        valid = false;
-    }
-
-    
-    if (password && password.length < 6) {
-        showError(passwordError, 'Hasło musi mieć minimum 6 znaków');
-        valid = false;
-    }
-
-  
-    if (!repeatPassword) {
-        showError(repeatPasswordError, 'Powtórz hasło');
-        valid = false;
-    }
-
-    
-    if (password && repeatPassword && password !== repeatPassword) {
-        showError(repeatPasswordError, 'Hasła nie są takie same');
-        valid = false;
-    }
-
-    if (!valid) //udana rejestracja
-        return;
-        
-
-
-    try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email,
-                name,
-                login,
-                password
-            })
-        });
-
-        const data = await response.json();
-
-        // Błąd z backendu
-        if (!response.ok) {
-            showError(loginError, data.message || 'Błąd rejestracji');
-            return;
-        }
-
-        // Sukces rejestracji
-        this.reset();
-        showView('login');
-
-    } catch (err) {
-        console.error('Błąd sieci:', err);
-
-        showError(loginError, 'Nie można połączyć się z serwerem');
-    }
-});
-
-
-// formularz zmiany hasła (bez fetch — TODO: podpiąć /api/change_password)
-
-document.getElementById('resetPasswordForm')?.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    // Spany błędów
-    const oldPasswordError = document.getElementById('oldPasswordError');
-    const newPasswordError = document.getElementById('newPasswordError');
-    const repeatNewPasswordError = document.getElementById('repeatNewPasswordError');
-
-    clearError(oldPasswordError);
-    clearError(newPasswordError);
-    clearError(repeatNewPasswordError);
-
-    // Dane formularza
-    const formData = new FormData(this);
-    const oldPassword = formData.get('oldPassword');
-    const newPassword = formData.get('newPassword');
-    const repeatNewPassword = formData.get('repeatNewPassword');
-
-    let valid = true;
-
-    if (!oldPassword) {
-        showError(oldPasswordError, 'Podaj stare hasło');
-        valid = false;
-    }
-
-    if (!newPassword) {
-        showError(newPasswordError, 'Podaj nowe hasło');
-        valid = false;
-    } else if (newPassword.length < 6) {
-        showError(newPasswordError, 'Hasło musi mieć minimum 6 znaków');
-        valid = false;
-    }
-
-    if (!repeatNewPassword) {
-        showError(repeatNewPasswordError, 'Powtórz nowe hasło');
-        valid = false;
-    } else if (newPassword && newPassword !== repeatNewPassword) {
-        showError(repeatNewPasswordError, 'Hasła nie są takie same');
-        valid = false;
-    }
-
-    if (!valid) //udana zmiana hasła
-        return;
-
-    // TODO
-    this.reset();
-    showView('account');
-});
-
-
-// Wylogowanie (narazie bez logiki)
-
-function handleLogout() {
-    // TODO: logika wylogowania (czyszczenie sesji/tokenu)
-    showView('home');
 }
