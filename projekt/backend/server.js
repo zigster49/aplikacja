@@ -277,6 +277,28 @@ apiRouter.delete('/users/:id', async(req, res) => {
 
 //Resetowanie hasła TODO
 apiRouter.post('/users/:id/reset-password', async(req, res) => {
+const { newPassword } = req.body;
+
+    if (!newPassword) {
+        return res.status(400).json({ message: 'Nowe hasło musi zostać podane!' });
+    }
+    try {
+        const hashed_password = await bcrypt.hash(newPassword, 10);
+        db.run(
+            'UPDATE users SET password = ? WHERE id = ?',
+            [hashed_password, req.params.id],
+            (err) => {
+                if (err) {
+                    console.error('Błąd aktualizacji hasła:', err);
+                    return res.status(500).json({ message: 'Błąd aktualizacji hasła' });
+                }
+                return res.json({ message: 'Hasło zostało zresetowane' });
+            }
+        );
+    } catch (error) {
+        console.error('Błąd hashowania hasła:', error);
+        return res.status(500).json({ message: 'Błąd hashowania hasła' });
+    }
 });
 
 
