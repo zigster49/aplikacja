@@ -150,7 +150,9 @@ apiRouter.get('/me', (req, res) => {
             loggedIn: true,
             userId: req.session.userId,
             login: req.session.login,
-            name: req.session.name
+            name: req.session.name,
+            email: req.session.email,
+            role: req.session.role
         });
     } else {
         return res.status(401).json({ loggedIn: false });
@@ -188,11 +190,43 @@ apiRouter.delete('/quizzes/:id', async (req, res) => {});
 
 
 // Aktualizacja informacji o użytkowniku TODO
-apiRouter.patch('/users/:id', async (req, res) => {});
+apiRouter.patch('/users/:id', async (req, res) => {
+  
+});
 
 // Usunięcie użytkownika TODO
-apiRouter.delete('/users/:id', async (req, res) => {});
+apiRouter.delete('/users/:id', async (req, res) => {
+    db.run('DELETE FROM users WHERE id = ?', [req.params.id], function (err) {
+        if (err) {
+            console.error('Błąd usuwania użytkownika:', err);
+            return res.status(500).json({ message: 'Błąd usuwania użytkownika' });
+        }
+        return res.json({ message: 'Użytkownik został usunięty' });
+    });
+});
+//Pobierz informacje o użytkowniku, dashboard dla admina TODO
+apiRouter.get('/users/:id', (req, res) => {
+    
+    const query = `
+        SELECT users.id, users.email, users.name, users.login, roles.name AS role
+        FROM users
+        JOIN roles ON users.role_id = roles.id
+        WHERE users.id = ?
+    `;
 
+    db.get(query, [req.params.id], (err, user) => {
+        if (err) {
+            console.error('Błąd pobierania informacji o użytkowniku:', err);
+            return res.status(500).json({ message: 'Błąd pobierania informacji o użytkowniku' });
+        }
+        if (!user) {
+            return res.status(404).json({ message: 'Użytkownik nie został znaleziony' });
+        }
+
+        
+        return res.json(user);
+    });
+});
 // Resetowanie hasła
 apiRouter.post('/users/:id/reset-password', async (req, res) => {
     const { newPassword } = req.body;
