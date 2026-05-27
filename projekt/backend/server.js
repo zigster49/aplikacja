@@ -191,7 +191,77 @@ apiRouter.delete('/quizzes/:id', async (req, res) => {});
 
 // Aktualizacja informacji o użytkowniku TODO
 apiRouter.patch('/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { email, name, login, password, role_id } = req.body;
+
+    // 1. Dynamicznie budujemy zapytanie SQL na podstawie tego, co przyszło w req.body
+    const fieldsToUpdate = [];
+    const values = [];
+
+    if (email) {
+        fieldsToUpdate.push('email = ?');
+        values.push(email.trim());
+    }
+    if (name) {
+        fieldsToUpdate.push('name = ?');
+        values.push(name.trim());
+    }
+    if (login) {
+        fieldsToUpdate.push('login = ?');
+        values.push(login.trim());
+    }
+    if (role_id) {
+        fieldsToUpdate.push('role_id = ?');
+        values.push(Number(role_id));
+    }
+    
+   
+    if (password) {
+        try {
+            
+            const hashedPassword = await bcrypt.hash(password, 10);
+            fieldsToUpdate.push('password = ?');
+            values.push(hashedPassword);
+        } catch (hashErr) {
+            console.error('Błąd podczas haszowania hasła:', hashErr);
+            return res.status(500).json({ message: 'Błąd przetwarzania hasła.' });
+        }
+    }
+
+   
+    if (fieldsToUpdate.length === 0) {
+        return res.status(400).json({ message: 'Brak danych do aktualizacji.' });
+    }
+
+    
+    values.push(userId);
+
+    // Składamy zapytanie SQL, np: UPDATE users SET name = ?, email = ? WHERE id = ?
+    const query = `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
+
   
+    
+    db.run(query, values, function (err) {
+        if (err) {
+            console.error('Błąd podczas aktualizacji użytkownika:', err);
+
+            // Obsługa błędu unikalności (jeśli ktoś próbuje zmienić email/login na taki, który już istnieje)
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ message: 'Podany login lub adres e-mail jest już zajęty.' });
+            }
+
+            return res.status(500).json({ message: 'Błąd serwera podczas aktualizacji danych.' });
+        }
+
+        // "this.changes" mówi nam, ile wierszy zostało zmodyfikowanych.
+        // Jeśli wynosi 0, oznacza to, że użytkownik o takim ID nie istnieje w bazie.
+        if (this.changes === 0) {
+            return res.status(404).json({ message: 'Użytkownik nie został znaleziony.' });
+        }
+
+        //
+        return res.json({ message: 'Dane użytkownika zostały pomyślnie zaktualizowane.' });
+    });
 });
 
 // Usunięcie użytkownika TODO
