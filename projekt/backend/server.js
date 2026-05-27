@@ -189,7 +189,7 @@ apiRouter.patch('/quizzes/:id', async (req, res) => {});
 apiRouter.delete('/quizzes/:id', async (req, res) => {});
 
 
-// Aktualizacja informacji o użytkowniku TODO
+// Aktualizacja informacji o użytkowniku 
 apiRouter.patch('/users/:id', async (req, res) => {
     const userId = req.params.id;
     const { email, name, login, password, role_id } = req.body;
@@ -297,6 +297,60 @@ apiRouter.get('/users/:id', (req, res) => {
         return res.json(user);
     });
 });
+
+// Pobieranie listy wszystkich użytkowników 
+apiRouter.get('/users', (req, res) => {
+    const query = `
+        SELECT users.id, users.email, users.name, users.login, users.role_id, roles.name AS role
+        FROM users
+        LEFT JOIN roles ON users.role_id = roles.id
+    `;
+
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Błąd pobierania wszystkich użytkowników:', err);
+            return res.status(500).json({ message: 'Błąd pobierania listy użytkowników' });
+        }
+        return res.json(rows);
+    });
+});
+//Dodawanie uzytkownikow przez admina 
+apiRouter.post('/users', async (req, res) => {
+    const { email, name, login, password, role_id } = req.body;
+
+    if (!email || !name || !login || !password || !role_id) {
+        return res.status(400).json({ message: 'Wszystkie pola muszą zostać wypełnione!' });
+    }
+
+    db.get('SELECT * FROM users WHERE email = ? OR login = ?', [email, login], async (err, row) => {
+        if (err) {
+            console.error('Błąd bazy danych:', err);
+            return res.status(500).json({ message: 'Błąd bazy danych.' });
+        }
+        if (row) {
+            return res.status(409).json({ message: 'Użytkownik o podanym loginie lub e-mailu już istnieje.' });
+        }
+
+        try {
+            const hashed_password = await bcrypt.hash(password, 10);
+
+            db.run(
+                'INSERT INTO users (email, name, login, password, role_id) VALUES (?, ?, ?, ?, ?)',
+                [email, name, login, hashed_password, Number(role_id)],
+                function (err) {
+                    if (err) {
+                        console.error('Błąd zapisu:', err);
+                        return res.status(500).json({ message: 'Błąd zapisu do bazy danych.' });
+                    }
+                    return res.status(201).json({ message: 'Użytkownik został pomyślnie utworzony.' });
+                }
+            );
+        } catch (error) {
+            console.error('Błąd serwera:', error);
+            return res.status(500).json({ message: 'Błąd wewnętrzny serwera.' });
+        }
+    });
+});
 // Resetowanie hasła
 apiRouter.post('/users/:id/reset-password', async (req, res) => {
     const { newPassword } = req.body;
@@ -322,14 +376,32 @@ apiRouter.post('/users/:id/reset-password', async (req, res) => {
         return res.status(500).json({ message: 'Błąd hashowania hasła' });
     }
 });
+//Middleware do sprawdzania, czy użytkownik jest zalogowany
+function Auth(req, res, next) {
+    
+    if (req.session && req.session.userId) {
+        next(); 
+    } else {
+        
+        
+        res.status(403).send('Musisz się zalogować, aby zobaczyć tę stronę.');
+        
+    }
+}
 
-
+//Chroniony endpoint dla admina, dashboard dla admina 
+app.get('/dashboard_admin', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, '../../views/admin_dashboard.html')
+    );
+});
 // Montujemy router API pod ścieżką /api
 app.use('/api', apiRouter);
 
 
 // TRASY STRON (HTML)
 // JavaScript (main.js) przełącza widoki na podstawie URL.
+
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });

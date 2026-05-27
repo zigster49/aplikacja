@@ -6,25 +6,10 @@
     <title>Panel Administratora - Zarządzanie Użytkownikami</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Dodatkowe delikatne poprawki wizualne */
-        body {
-            background-color: #f4f6f9;
-        }
-        .card {
-            border: none;
-            border-radius: 12px;
-        }
-        .table th {
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-        .badge {
-            font-size: 0.85rem;
-            padding: 0.4em 0.6em;
-            border-radius: 6px;
-        }
+        body { background-color: #f4f6f9; }
+        .card { border: none; border-radius: 12px; }
+        .table th { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .badge { font-size: 0.85rem; padding: 0.4em 0.6em; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -32,7 +17,7 @@
     <nav class="navbar navbar-dark bg-dark mb-5 shadow-sm">
         <div class="container">
             <span class="navbar-brand mb-0 h1">Admin Panel</span>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Wyloguj się</a>
+            <button id="logoutBtn" class="btn btn-outline-light btn-sm">Wyloguj się</button>
         </div>
     </nav>
 
@@ -67,11 +52,11 @@
         </div>
     </div>
 
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="addUserModalLabel">Dodaj nowego użytkownika</h5>
+                    <h5 class="modal-title">Dodaj nowego użytkownika</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -157,7 +142,6 @@
                 <div class="modal-body">
                     <form id="editUserForm">
                         <input type="hidden" id="editId">
-                        
                         <div class="mb-3">
                             <label for="editName" class="form-label">Imię i nazwisko</label>
                             <input type="text" class="form-control" id="editName" required>
@@ -173,13 +157,13 @@
                         <div class="mb-3">
                             <label for="editPassword" class="form-label">Nowe Hasło</label>
                             <input type="password" class="form-control" id="editPassword" placeholder="Zostaw puste, jeśli bez zmian">
-                            <div class="form-text text-muted">Wpisz hasło tylko, jeśli chcesz je zresetować użytkownikowi.</div>
+                            <div class="form-text text-muted">Wpisz nowe hasło tylko wtedy, jeśli chcesz je zmienić.</div>
                         </div>
                         <div class="mb-3">
                             <label for="editRole_id" class="form-label">Rola</label>
                             <select class="form-select" id="editRole_id">
-                                <option value="2">User </option>
-                                <option value="1">Admin </option>
+                                <option value="2">User</option>
+                                <option value="1">Admin</option>
                             </select>
                         </div>
                         <div class="text-end mt-4">
@@ -200,35 +184,44 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="mb-2">Czy na pewno chcesz bezpowrotnie usunąć użytkownika o ID <strong id="deleteUserIdText"></strong>?</p>
+                    <p class="mb-2">Czy na pewno chcesz usunąć użytkownika o ID <strong id="deleteUserIdText"></strong>?</p>
                     <span class="text-danger small fw-bold">Tej operacji nie można cofnąć!</span>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Usuń permanentnie</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Usuń</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        let userIdToDelete = null; // Zmienna globalna przechowująca ID usera do skasowania
+        let userIdToDelete = null; 
+        let viewModalInstance = null;
+        let editModalInstance = null;
+        let deleteModalInstance = null;
 
-       
-        // 1. POBIERANIE I WYŚWIETLANIE LISTY (GET)
-        
+        document.addEventListener("DOMContentLoaded", () => {
+            viewModalInstance = new bootstrap.Modal(document.getElementById('viewUserModal'));
+            editModalInstance = new bootstrap.Modal(document.getElementById('editUserModal'));
+            deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+            loadUsers();
+        });
+
+        // 1. POBIERANIE LISTY (GET /api/users)
         async function loadUsers() {
             try {
-                const response = await fetch('/api/admin/users'); 
-                if (!response.ok) throw new Error('Błąd podczas pobierania danych z serwera.');
+                const response = await fetch('/api/users'); 
+                if (!response.ok) throw new Error('Błąd serwera');
                 
                 const users = await response.json();
                 const tbody = document.getElementById('usersTableBody');
-                tbody.innerHTML = ''; // Wyczyszczenie starych wierszy przed załadowaniem nowych
+                tbody.innerHTML = ''; 
 
                 users.forEach(user => {
+                    // Sprawdzamy czy rola to admin (tekstowo lub numerycznie)
+                    const isAdmin = user.role_id === 1 || String(user.role).toLowerCase() === 'admin';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><span class="fw-bold text-muted">${user.id}</span></td>
@@ -236,8 +229,8 @@
                         <td><code>${user.login}</code></td>
                         <td>${user.email}</td>
                         <td>
-                            <span class="badge ${user.role_id === 1 ? 'bg-danger' : 'bg-primary'}">
-                                ${user.role_id === 1 ? 'Admin' : 'User'}
+                            <span class="badge ${isAdmin ? 'bg-danger' : 'bg-primary'}">
+                                ${isAdmin ? 'Admin' : 'User'}
                             </span>
                         </td>
                         <td class="text-center">
@@ -254,15 +247,9 @@
             }
         }
 
-        // Uruchomienie ładowania tabeli od razu po wejściu na stronę
-        loadUsers();
-
-        
-        // 2. DODAWANIE NOWEGO UŻYTKOWNIKA (POST)
-      
+        // 2. DODAWANIE (POST /api/users)
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const userData = {
                 name: document.getElementById('addName').value,
                 login: document.getElementById('addLogin').value,
@@ -277,85 +264,70 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(userData)
                 });
-
                 const result = await response.json();
 
                 if (response.ok) {
                     alert('Użytkownik został pomyślnie utworzony!');
-                    
-                    // Schowanie modala dodawania
-                    const modalEl = document.getElementById('addUserModal');
-                    bootstrap.Modal.getInstance(modalEl).hide();
-
-                    document.getElementById('addUserForm').reset(); // Reset pól
-                    loadUsers(); // Przeładowanie tabeli na żywo
+                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                    document.getElementById('addUserForm').reset(); 
+                    loadUsers();
                 } else {
                     alert(`Błąd: ${result.message}`);
                 }
             } catch (err) {
-                console.error(err);
-                alert('Wystąpił błąd sieci podczas dodawania użytkownika.');
+                alert('Wystąpił błąd sieci.');
             }
         });
 
-        
-        // 3. PODGLĄD SZCZEGÓŁÓW PO ID (GET)
-       
+        // 3. PODGLĄD (GET /api/users/:id)
         async function viewUser(id) {
             try {
                 const response = await fetch(`/api/users/${id}`);
-                if (!response.ok) throw new Error('Nie znaleziono takiego użytkownika.');
-                
+                if (!response.ok) throw new Error('Nie znaleziono użytkownika.');
                 const user = await response.json();
                 
-                // Uzupełnienie danych w oknie podglądu
                 document.getElementById('viewId').textContent = user.id;
                 document.getElementById('viewName').textContent = user.name;
                 document.getElementById('viewLogin').textContent = user.login;
                 document.getElementById('viewEmail').textContent = user.email;
                 
                 const roleBadge = document.getElementById('viewRole');
-                roleBadge.textContent = user.role.toUpperCase();
-                roleBadge.className = user.role === 'admin' ? 'badge bg-danger' : 'badge bg-primary';
+                const isAdmin = user.role_id === 1 || String(user.role).toLowerCase() === 'admin';
+                roleBadge.textContent = isAdmin ? 'ADMIN' : 'USER';
+                roleBadge.className = isAdmin ? 'badge bg-danger' : 'badge bg-primary';
 
-                // Pokazanie modala podglądu
-                const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
-                modal.show();
+                viewModalInstance.show();
             } catch (err) {
                 alert(err.message);
             }
         }
 
-        
-        // 4. OTWARCIE FORMULARZA EDYCJI i UZUPEŁNIENIE DANYCH
-        
+        // 4. EDYCJA - URUCHOMIENIE (GET /api/users/:id)
         async function openEditModal(id) {
             try {
                 const response = await fetch(`/api/users/${id}`);
-                if (!response.ok) throw new Error('Nie udało się pobrać aktualnych danych użytkownika.');
+                if (!response.ok) throw new Error('Nie udało się pobrać danych.');
                 const user = await response.json();
 
-                // Wstrzyknięcie pobranych wartości do inputów formularza edycji
                 document.getElementById('editUserTitleId').textContent = user.id;
                 document.getElementById('editId').value = user.id;
                 document.getElementById('editName').value = user.name;
                 document.getElementById('editLogin').value = user.login;
                 document.getElementById('editEmail').value = user.email;
-                document.getElementById('editRole_id').value = user.role === 'admin' ? "1" : "2";
-                document.getElementById('editPassword').value = ''; // Pole nowego hasła domyślnie czyste
+                
+                const isAdmin = user.role_id === 1 || String(user.role).toLowerCase() === 'admin';
+                document.getElementById('editRole_id').value = isAdmin ? "1" : "2";
+                document.getElementById('editPassword').value = ''; 
 
-                // Pokazanie modala edycji
-                const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-                modal.show();
+                editModalInstance.show();
             } catch (err) {
                 alert(err.message);
             }
         }
 
-        // ZAPIS ZMIAN EDYCJI (PATCH)
+        // EDYCJA - ZAPIS (PATCH /api/users/:id)
         document.getElementById('editUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const id = document.getElementById('editId').value;
             const updatedData = {
                 name: document.getElementById('editName').value,
@@ -364,7 +336,6 @@
                 role_id: document.getElementById('editRole_id').value
             };
 
-            // Sprawdzenie, czy administrator wpisał nowe hasło dla tego konta
             const newPassword = document.getElementById('editPassword').value;
             if (newPassword.trim() !== '') {
                 updatedData.password = newPassword;
@@ -376,54 +347,54 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedData)
                 });
-
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert('Dane użytkownika zostały zaktualizowane.');
-                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-                    loadUsers(); // Odświeżenie listy
+                    alert('Dane zostały zaktualizowane.');
+                    editModalInstance.hide();
+                    loadUsers(); 
                 } else {
                     alert(`Błąd: ${result.message}`);
                 }
             } catch (err) {
-                alert('Wystąpił błąd podczas wysyłania żądania aktualizacji.');
+                alert('Błąd podczas zapisu danych.');
             }
         });
 
-        // ==========================================
-        // 5. OBSŁUGA USUWANIA (DELETE)
-        // ==========================================
+        // 5. USUWANIE (DELETE /api/users/:id)
         function openDeleteModal(id) {
-            userIdToDelete = id; // Przekazanie ID do zmiennej pomocniczej
+            userIdToDelete = id; 
             document.getElementById('deleteUserIdText').textContent = id;
-            
-            const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
-            modal.show();
+            deleteModalInstance.show();
         }
 
-        // Kliknięcie przycisku "Usuń permanentnie" wewnątrz małego modala
         document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
             if (!userIdToDelete) return;
-
             try {
-                const response = await fetch(`/api/users/${userIdToDelete}`, {
-                    method: 'DELETE'
-                });
-
+                const response = await fetch(`/api/users/${userIdToDelete}`, { method: 'DELETE' });
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert('Konto zostało pomyślnie usunięte z bazy danych.');
-                    bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
-                    loadUsers(); // Usunięto z bazy, więc aktualizujemy widok tabeli
+                    alert('Użytkownik został usunięty.');
+                    deleteModalInstance.hide();
+                    loadUsers(); 
                 } else {
                     alert(`Błąd: ${result.message}`);
                 }
             } catch (err) {
-                alert('Wystąpił błąd sieci podczas próby usunięcia.');
+                alert('Błąd sieci.');
             } finally {
-                userIdToDelete = null; // Reset zmiennej bezpieczeństwa
+                userIdToDelete = null; 
+            }
+        });
+
+        // Wylogowanie (POST /api/logout)
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout', { method: 'POST' });
+                if (response.ok) window.location.href = '/';
+            } catch (err) {
+                alert('Błąd połączenia.');
             }
         });
     </script>

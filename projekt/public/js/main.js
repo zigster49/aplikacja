@@ -120,11 +120,12 @@ async function checkSession() {
         if (data.loggedIn) {
             currentUserId = data.userId; // Zapisz ID zalogowanego użytkownika
             
-            // Pokaż linki dla zalogowanych
+            // Pokaż linki dla zalogowanych TODO dac ifa czy admin 
             if (navLinks) {
                 navLinks.innerHTML = `
                     <li><a href="#" class="nav-btn" onclick="showView('quizzes'); return false;">Quizy</a></li>
-                    <li><a href="#" class="nav-btn" onclick="showView('account'); return false;">Konto (${data.login})</a></li>
+                    <li><a href="#" class="nav-btn" onclick="showView('account'); return false;">Konto</a></li>
+                    <li><a href="/dashboard_admin" class="nav-btn">Panel Admina</a></li> 
                 `;
             }
 
