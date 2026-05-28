@@ -1,4 +1,5 @@
-﻿const express = require('express');
+﻿require('dotenv').config();
+const express = require('express');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const path = require('path');
@@ -15,7 +16,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Konfiguracja sesji
 app.use(session({
-    secret: 'twoj_bardzo_tajny_klucz_quizzes', // W produkcji trzymaj w zmiennej środowiskowej (.env)
+    secret: process.env.QUIZZES_SECRET, 
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -205,11 +206,11 @@ apiRouter.delete('/quizzes/:id', async (req, res) => {});
 
 
 // Aktualizacja informacji o użytkowniku 
-apiRouter.patch('/users/:id', async (req, res) => {
+apiRouter.patch('/users/:id', RequireAdmin, async (req, res) => {
     const userId = req.params.id;
     const { email, name, login, password, role_id } = req.body;
 
-    // 1. Dynamicznie budujemy zapytanie SQL na podstawie tego, co przyszło w req.body
+    // 1. Dynamicznie buduje zapytanie SQL na podstawie tego, co przyszło w req.body
     const fieldsToUpdate = [];
     const values = [];
 
