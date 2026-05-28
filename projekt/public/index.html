@@ -5,176 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizzes</title>
 
- 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 
-   
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<!-- ===== NAWIGACJA ===== -->
 <nav id="navbar">
-    <!-- Logo / nazwa aplikacji -->
     <a href="#" class="nav-logo" onclick="showView('home'); return false;">Quizzes</a>
-
-    <!-- Linki nawigacyjne -->
     <ul class="nav-links">
         <li><a href="#" class="nav-btn" onclick="showView('login'); return false;">Logowanie</a></li>
         <li><a href="#" class="nav-btn" onclick="showView('register'); return false;">Zarejestruj się</a></li>
         <li><a href="#" class="nav-btn" onclick="showView('quizzes'); return false;">Quizy</a></li>
         <li><a href="#" class="nav-btn" onclick="showView('account'); return false;">Konto</a></li>
         <li id="adminNavItem" style="display: none;">
-    <a href="/dashboard_admin" class="nav-btn">Panel Admina</a>
-</li>
+            <a href="/dashboard_admin" class="nav-btn">Panel Admina</a>
+        </li>
     </ul>
 </nav>
 
-<!-- ===== WIDOK: STRONA GŁÓWNA =====
-     Domyślnie widoczny. JS ukrywa go i pokazuje formularze
-     po kliknięciu w linki nawigacyjne. -->
 <div id="homeView">
     <main class="hero">
         <h1>Witaj w <span>Quizzes</span></h1> <br>
-        
-        <!-- CTA (najważniejsze akcje) -->
         <div class="hero-cards">
-    <div class="hero-card" onclick="showView('daily_quizz')">
-        <h3>📅 Daily Quiz</h3>
-        <p>Rozwiąż dzisiejszy quiz i sprawdź swoją wiedzę</p>
-    </div>
-
-    <div class="hero-card" onclick="showView('quizzes')">
-        <h3>📚 Wszystkie quizy</h3>
-        <p>Przejdź do pełnej bazy quizów</p>
-    </div>
-</div>
-</div>
+            <div class="hero-card" onclick="showView('daily_quizz')">
+                <h3>📅 Daily Quiz</h3>
+                <p>Rozwiąż dzisiejszy quiz i sprawdź swoją wiedzę</p>
+            </div>
+            <div class="hero-card" onclick="showView('quizzes')">
+                <h3>📚 Wszystkie quizy</h3>
+                <p>Przejdź do pełnej bazy quizów</p>
+            </div>
+        </div>
     </main>
 </div>
 
-<!-- ===== WIDOK: LOGOWANIE =====
-     Domyślnie ukryty; pokazywany przez showView('login'). -->
 <div id="loginView" style="display:none;">
     <main class="auth-main">
         <div id="authBox">
             <h2>Logowanie</h2>
-
             <form id="loginForm">
-                <!-- Pole loginu -->
-                <input
-                    type="text"
-                    name="login"
-                    placeholder="Login"
-                    autocomplete="username"
-                    
-                />
-                <!-- Komunikat błędu loginu (wypełniany przez JS) -->
+                <input type="text" name="login" placeholder="Login" autocomplete="username" />
                 <span class="error" id="loginError"></span>
-
-                <!-- Pole hasła -->
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Hasło"
-                    autocomplete="current-password"
-                    
-                />
-                <!-- Komunikat błędu hasła (wypełniany przez JS) -->
+                <input type="password" name="password" placeholder="Hasło" autocomplete="current-password" />
                 <span class="error" id="passwordError"></span>
-
                 <input type="submit" value="Zaloguj się">
             </form>
-
-            <p>Nie masz konta?
-                <a href="#" onclick="showView('register'); return false;">Zarejestruj się</a>
-            </p>
+            <p>Nie masz konta? <a href="#" onclick="showView('register'); return false;">Zarejestruj się</a></p>
         </div>
     </main>
 </div>
 
-<!-- ===== WIDOK: REJESTRACJA =====
-     Domyślnie ukryty; pokazywany przez showView('register'). -->
 <div id="registerView" style="display:none;">
     <main class="auth-main">
         <div id="authBox">
             <h2>Rejestracja</h2>
-
             <form id="registerForm">
-                <!-- Adres e-mail -->
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="E-mail"
-                    autocomplete="email"
-                    
-                />
+                <input type="email" name="email" placeholder="E-mail" autocomplete="email" />
                 <span class="error" id="emailError"></span>
-                
-                <input
-                    type="text"
-                    name="name"
-                    placeholder="Imię"
-                   
-                />
+                <input type="text" name="name" placeholder="Imię" />
                 <span class="error" id="nameError"></span>
-                
-                <input
-                    type="text"
-                    name="login"
-                    placeholder="Login"
-                    autocomplete="username"
-                   
-                />
+                <input type="text" name="login" placeholder="Login" autocomplete="username" />
                 <span class="error" id="loginErrorRegister"></span>
-                <!-- Nowe hasło -->
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Hasło"
-                    
-                    
-                />
+                <input type="password" name="password" placeholder="Hasło" />
                 <span class="error" id="passwordErrorRegister"></span>
-               
-                <input
-                    type="password"
-                    name="repeatPassword"
-                    placeholder="Powtórz hasło"
-                    
-                  
-                />
-                 <span class="error" id="repeatPasswordError"></span>
-                
-                 <input type="submit" value="Utwórz konto">
+                <input type="password" name="repeatPassword" placeholder="Powtórz hasło" />
+                <span class="error" id="repeatPasswordError"></span>
+                <input type="submit" value="Utwórz konto">
             </form>
-
-            <p>Masz już konto?
-                <a href="#" onclick="showView('login'); return false;">Zaloguj się</a>
-            </p>
+            <p>Masz już konto? <a href="#" onclick="showView('login'); return false;">Zaloguj się</a></p>
         </div>
     </main>
 </div>
 
-<!--=====Widok quizy======
-Domyślnie ukryty pokazywany przez showView('quizzes')-->
- <div id="quizzesView" style="display: none;">
+<div id="quizzesView" style="display: none;">
     <main class="quizzes_main">
-       <h2>Quizy</h2>
+      
+       <div id="quizzesContainer"></div>
     </main>
- </div>
+</div>
 
- <!--=====Widok konta========
-Domyślnie ukryty pokazywany przez showView('account')-->
-<!--=====Widok konta========
-Domyślnie ukryty pokazywany przez showView('account')-->
 <div id="accountView" style="display: none;">
     <main class="account_main">
         <div class="account-card">
-
-            <!-- Nagłówek z avatarem -->
             <div class="account-header">
                 <div class="account-avatar"></div>
                 <div class="account-info">
@@ -182,8 +97,6 @@ Domyślnie ukryty pokazywany przez showView('account')-->
                     <span class="account-login">@jan_kowalski</span>
                 </div>
             </div>
-
-            <!-- Licznik serii daily quiz -->
             <div class="streak-box">
                 <div class="streak-icon">🔥</div>
                 <div class="streak-details">
@@ -195,8 +108,6 @@ Domyślnie ukryty pokazywany przez showView('account')-->
                     <span class="streak-today completed">✔ Dzisiaj zaliczono</span>
                 </div>
             </div>
-
-            <!-- Statystyki -->
             <div class="account-stats">
                 <div class="stat-item">
                     <span class="stat-value">42</span>
@@ -211,17 +122,11 @@ Domyślnie ukryty pokazywany przez showView('account')-->
                     <span class="stat-label">Odznaki</span>
                 </div>
             </div>
-                <!-- Przycisk zmiany hasła -->
             <button class="change-password-btn" onclick="showView('reset_password')">Zmień hasło</button>
-            <!-- Przycisk wylogowania -->
             <button class="logout-btn" onclick="handleLogout()">Wyloguj się</button>
-
         </div>
     </main>
 </div>
-
-<!--=======Widok dziennego quizzu=======
-Domyślnie ukryty pokazywany przez showView('daily_quizz')-->
 
 <div id="daily_quizzView" style="display: none;">
    <main class="daily_quizz_main">
@@ -232,47 +137,35 @@ Domyślnie ukryty pokazywany przez showView('daily_quizz')-->
    </main>
 </div>
 
-<!--=====Widok resetowania hasła========-->
 <div id="reset_passwordView" style="display: none;">
     <main class="auth-main">
         <div id="authBox">
             <h2>Zmiana hasła</h2>
-
             <form id="resetPasswordForm">
-                <input
-                    type="password"
-                    name="oldPassword"
-                    placeholder="Stare hasło"
-                    autocomplete="current-password"
-                />
+                <input type="password" name="oldPassword" placeholder="Stare hasło" autocomplete="current-password" />
                 <span class="error" id="oldPasswordError"></span>
-
-                <input
-                    type="password"
-                    name="newPassword"
-                    placeholder="Nowe hasło"
-                    autocomplete="new-password"
-                />
+                <input type="password" name="newPassword" placeholder="Nowe hasło" autocomplete="new-password" />
                 <span class="error" id="newPasswordError"></span>
-
-                <input
-                    type="password"
-                    name="repeatNewPassword"
-                    placeholder="Powtórz nowe hasło"
-                    autocomplete="new-password"
-                />
+                <input type="password" name="repeatNewPassword" placeholder="Powtórz nowe hasło" autocomplete="new-password" />
                 <span class="error" id="repeatNewPasswordError"></span>
-
                 <input type="submit" value="Zmień hasło">
             </form>
-
-            <p>Wróć do
-                <a href="#" onclick="showView('account'); return false;">konta</a>
-            </p>
+            <p>Wróć do <a href="#" onclick="showView('account'); return false;">konta</a></p>
         </div>
     </main>
 </div>
 
+<div id="playQuizView" style="display: none;">
+    <main class="daily_quizz_main">
+        <h2 class="daily-quiz-title" id="playQuizTitle">Nazwa Quizu</h2>
+        <div id="playQuizContainer">
+            <div class="daily-quiz-card">
+                <div id="playQuizQuestionContainer"></div>
+                <p id="playQuizFeedback" class="quiz-feedback"></p>
+            </div>
+        </div>
+    </main>
+</div>
 
 <script src="/js/main.js"></script>
 </body>

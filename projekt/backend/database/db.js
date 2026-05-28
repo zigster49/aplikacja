@@ -53,7 +53,15 @@ db.serialize(() => {
             FOREIGN KEY (role_id) REFERENCES roles(id)
         )
     `);
-
+  //Quizy
+    db.run(`
+        CREATE TABLE IF NOT EXISTS quizzes (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            title      TEXT    NOT NULL,
+            data       TEXT    NOT NULL, -- JSON z pytaniami i odpowiedziami
+            created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+        )
+    `);
 });
 
 module.exports = db;

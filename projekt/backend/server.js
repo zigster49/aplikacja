@@ -5,44 +5,7 @@ const path = require('path');
 const session = require('express-session');
 const db = require('./database/db.js');
 
-const dailyQuizzes = [
-    {
-        title: 'Quiz dnia: Geografia',
-        questions: [
-            { question: 'Który kontynent jest największy pod względem powierzchni?', options: ['Europa', 'Afryka', 'Azja', 'Ameryka Południowa'], correctIndex: 2 },
-            { question: 'Jaka jest stolica Australii?', options: ['Sydney', 'Melbourne', 'Canberra', 'Brisbane'], correctIndex: 2 },
-            { question: 'Który ocean jest największy?', options: ['Atlantycki', 'Spokojny', 'Indyjski', 'Arktyczny'], correctIndex: 1 },
-            { question: 'Jaka jest najwyższa góra świata?', options: ['K2', 'Mount Everest', 'Kangchenjunga', 'Lhotse'], correctIndex: 1 },
-            { question: 'Która rzeka jest najdłuższa na świecie?', options: ['Amazonka', 'Nil', 'Jangcy', 'Missisipi'], correctIndex: 0 },
-            { question: 'Jakie państwo ma największą populację?', options: ['Indie', 'Stany Zjednoczone', 'Chiny', 'Indonezja'], correctIndex: 2 },
-            { question: 'Które państwo jest najmniejsze pod względem powierzchni?', options: ['Monako', 'San Marino', 'Watykan', 'Liechtenstein'], correctIndex: 2 }
-        ]
-    },
-    {
-        title: 'Quiz dnia: Nauka',
-        questions: [
-            { question: 'Która cząsteczka przenosi informację genetyczną?', options: ['RNA', 'Białko', 'Woda', 'DNA'], correctIndex: 3 },
-            { question: 'Jaka jest jednostka siły w układzie SI?', options: ['Newton', 'Dżul', 'Wat', 'Katal'], correctIndex: 0 },
-            { question: 'Jaki gaz jest najczęściej w atmosferze ziemskiej?', options: ['Tlen', 'Azot', 'Dwutlenek węgla', 'Argon'], correctIndex: 1 },
-            { question: 'Ile planet ma Układ Słoneczny?', options: ['7', '8', '9', '10'], correctIndex: 1 },
-            { question: 'Jaka jest prędkość światła w próżni?', options: ['300 000 km/s', '150 000 km/s', '3 000 km/s', '30 000 km/s'], correctIndex: 0 },
-            { question: 'Który organ odpowiada przede wszystkim za filtrowanie krwi?', options: ['Wątroba', 'Nerki', 'Płuca', 'Serce'], correctIndex: 1 },
-            { question: 'W jakim stanie skupienia znajduje się woda przy 0°C i normalnym ciśnieniu?', options: ['Gazowym', 'Ciekłym', 'Stałym', 'Plazmie'], correctIndex: 2 }
-        ]
-    },
-    {
-        title: 'Quiz dnia: Historia',
-        questions: [
-            { question: 'W którym roku Polska odzyskała niepodległość po I wojnie światowej?', options: ['1914', '1918', '1920', '1939'], correctIndex: 1 },
-            { question: 'Które miasto było stolicą Cesarstwa Rzymskiego?', options: ['Ateny', 'Rzym', 'Kartaż', 'Jerozolima'], correctIndex: 1 },
-            { question: 'W którym roku rozpoczęła się II wojna światowa?', options: ['1937', '1938', '1939', '1940'], correctIndex: 2 },
-            { question: 'Kiedy miała miejsce bitwa pod Grunwaldem?', options: ['1410', '1510', '1610', '1310'], correctIndex: 0 },
-            { question: 'Kto podpisał Deklarację Niepodległości Stanów Zjednoczonych?', options: ['George Washington', 'Thomas Jefferson', 'Abraham Lincoln', 'Benjamin Franklin'], correctIndex: 1 },
-            { question: 'W którym roku powstała Unia Europejska w obecnej formie?', options: ['1951', '1992', '2004', '2010'], correctIndex: 1 },
-            { question: 'Jak nazywała się starożytna droga handlowa łącząca Europę z Azją?', options: ['Jedwabny Szlak', 'Trakt Solny', 'Droga Morska', 'Szlak Wodny'], correctIndex: 0 }
-        ]
-    }
-];
+
 
 const app = express();
 
@@ -174,10 +137,42 @@ apiRouter.post('/logout', (req, res) => {
 
 
 // Pobranie i wyświetlenie quizów z bazy danych TODO
-apiRouter.get('/quizzes', async (req, res) => {});
+apiRouter.get('/quizzes', async (req, res) => {
+   db.all('SELECT id, title, data FROM quizzes', [], (err, rows) => {
+        if (err) {
+            console.error('Błąd pobierania quizów:', err);
+            return res.status(500).json({ message: 'Błąd pobierania quizów' });
+        }
+
+        const quizzes = rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            questions: JSON.parse(row.data) 
+        }));
+
+        return res.json(quizzes);
+    });
+
+});
 
 // Pobranie quizu po jego id TODO
-apiRouter.get('/quizzes/:id', async (req, res) => {});
+apiRouter.get('/quizzes/:id', async (req, res) => {
+     db.get('SELECT id, title, data FROM quizzes WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) {
+            console.error('Błąd pobierania quizu:', err);
+            return res.status(500).json({ message: 'Błąd pobierania quizu' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Quiz nie został znaleziony' });
+        }
+
+        return res.json({
+            id: row.id,
+            title: row.title,
+            questions: JSON.parse(row.data)
+        });
+    });
+});
 
 // Utworzenie quizu, dashboard dla admina TODO
 apiRouter.post('/quizzes', async (req, res) => {});
