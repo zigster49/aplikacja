@@ -23,13 +23,21 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24 // Sesja wygasa po 24 godzinach
     }
 }));
-
+// Middleware do sprawdzania, czy użytkownik jest zalogowany i czy jest adminem
+function RequireAdmin(req, res, next) {
+    if (req.session && req.session.userId && req.session.role === 'admin') {
+        next(); 
+    } else {
+       
+        res.status(403).send('Brak dostępu. Ta strona jest przeznaczona tylko dla administratorów.');
+    }
+}
 // ROUTER – grupowanie tras API pod prefiksem /api
 const apiRouter = express.Router();
 
 
-// POST /api/login
-// Sprawdza dane logowania i zapisuje sesję.
+
+// Sprawdza dane logowania, pobiera rolę użytkownika i zapisuje sesję.
 apiRouter.post('/login', async (req, res) => {
     const { login, password } = req.body;
 
@@ -37,7 +45,15 @@ apiRouter.post('/login', async (req, res) => {
         return res.status(400).json({ message: 'Wszystkie pola powinny zostać uzupełnione!' });
     }
 
-    db.get('SELECT * FROM users WHERE login = ?', [login], async (err, user) => {
+    
+    const query = `
+        SELECT users.*, roles.name AS role_name 
+        FROM users 
+        LEFT JOIN roles ON users.role_id = roles.id 
+        WHERE users.login = ?
+    `;
+
+    db.get(query, [login], async (err, user) => {
         if (err) {
             console.error('Błąd bazy danych:', err);
             return res.status(500).json({ message: 'Błąd serwera' });
@@ -53,13 +69,17 @@ apiRouter.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Niepoprawne hasło' });
         }
 
-        // Zapisanie danych do sesji
+      
         req.session.userId = user.id;
         req.session.login = user.login;
         req.session.name = user.name;
         req.session.email = user.email;
+        req.session.role = user.role_name; 
 
-        return res.json({ message: 'Zalogowano pomyślnie' });
+        return res.json({ 
+            message: 'Zalogowano pomyślnie',
+            role: user.role_name 
+        });
     });
 });
 
@@ -260,7 +280,7 @@ apiRouter.patch('/users/:id', async (req, res) => {
 });
 
 // Usunięcie użytkownika TODO
-apiRouter.delete('/users/:id', async (req, res) => {
+apiRouter.delete('/users/:id', RequireAdmin, async (req, res) => {
     db.run('DELETE FROM users WHERE id = ?', [req.params.id], function (err) {
         if (err) {
             console.error('Błąd usuwania użytkownika:', err);
@@ -270,7 +290,7 @@ apiRouter.delete('/users/:id', async (req, res) => {
     });
 });
 //Pobierz informacje o użytkowniku, dashboard dla admina TODO
-apiRouter.get('/users/:id', (req, res) => {
+apiRouter.get('/users/:id', RequireAdmin, (req, res) => {
     
     const query = `
         SELECT users.id, users.email, users.name, users.login, roles.name AS role
@@ -294,7 +314,7 @@ apiRouter.get('/users/:id', (req, res) => {
 });
 
 // Pobieranie listy wszystkich użytkowników 
-apiRouter.get('/users', (req, res) => {
+apiRouter.get('/users', RequireAdmin, (req, res) => {
     const query = `
         SELECT users.id, users.email, users.name, users.login, users.role_id, roles.name AS role
         FROM users
@@ -310,7 +330,7 @@ apiRouter.get('/users', (req, res) => {
     });
 });
 //Dodawanie uzytkownikow przez admina 
-apiRouter.post('/users', async (req, res) => {
+apiRouter.post('/users', RequireAdmin, async (req, res) => {
     const { email, name, login, password, role_id } = req.body;
 
     if (!email || !name || !login || !password || !role_id) {
@@ -371,21 +391,11 @@ apiRouter.post('/users/:id/reset-password', async (req, res) => {
         return res.status(500).json({ message: 'Błąd hashowania hasła' });
     }
 });
-//Middleware do sprawdzania, czy użytkownik jest zalogowany
-function Auth(req, res, next) {
-    
-    if (req.session && req.session.userId) {
-        next(); 
-    } else {
-        
-        
-        res.status(403).send('Musisz się zalogować, aby zobaczyć tę stronę.');
-        
-    }
-}
+
+
 
 //Chroniony endpoint dla admina, dashboard dla admina 
-app.get('/dashboard_admin', (req, res) => {
+app.get('/dashboard_admin', RequireAdmin, (req, res) => {
     res.sendFile(
         path.join(__dirname, '../../views/admin_dashboard.html')
     );
