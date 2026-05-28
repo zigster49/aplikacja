@@ -534,3 +534,106 @@ p {
     background: #007BFF;
     color: #fff;
 }
+
+
+/* Styl kafelków na liście quizów */
+#quizzesContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.quiz-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.quiz-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-card-content h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.quiz-card-content h3:hover {
+    color: #6366f1; /* Fioletowy kolor hover na tytule */
+    text-decoration: underline;
+}
+
+.quiz-card-content p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Wiadomości statusowe */
+.quiz-status-msg {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+/* ==========================================
+   STYLE DLA LISTY QUIZÓW Z BAZY DANYCH
+   ========================================== */
+#quizzesContainer {
+    display: flex;
+    flex-direction: column; /* Jeden pod drugim */
+    gap: 16px;
+    margin: 40px auto 0 auto;
+    max-width: 800px; /* Zwężamy kontener, by paski wyglądały zgrabnie */
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.quiz-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+/* Wyrównujemy zawartość paska w jedną linię */
+.quiz-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quiz-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+}
+
+.quiz-card-content h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.quiz-card-content p {
+    margin: 0;
+    color: #4f46e5; /* Liczba pytań jako fioletowy akcent po prawej stronie */
+    background: #f0fdf4;
+    background: rgba(79, 70, 229, 0.1);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
